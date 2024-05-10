@@ -117,3 +117,12 @@ this can go in config, will need it for quite a few cases in generating files.
 
 ## strip_abi_prefix()
 only needed for capsicum? maybe have in util though, seems useful.
+
+# Additional thoughts:
+* Are there maybe areas where an additional class would be better?
+* How much should be packaged in the syscall object, ret and args are already 
+separate classes? (i.e., should there be a "processing class" and a 
+"data storage class", would uncouple quite a bit)
+* Inserting things in config, as opposed to having them carried in an objects state.
+* How much of the write procedures should be reused, what can be reused, and if that
+should be its own module/class.
