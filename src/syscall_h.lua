@@ -61,7 +61,7 @@ local function gen_syscalls_mk(tbl, cfg)
 		if v.num > max then
 			max = v.num
 		end
-		if      v.type.STD or
+		if  v.type.STD or
 			v.type.NOSTD or
 			v.type.SYSMUX or
 			c >= 7 then

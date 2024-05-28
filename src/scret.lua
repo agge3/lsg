@@ -4,19 +4,20 @@
 -- Copyright (c) 2024 Tyler Baxter <agge@freebsd.org>
 --
 
-local scarg = {}
+local config = require("config")
 
-scarg.__index = scarg
+local scret = {}
 
-function scarg:new(obj, line)
+scret.__index = scret
+
+function scret:new(obj, line)
 	obj = obj or { }
 	setmetatable(obj, self)
 	self.__index = self
 
-	self.scarg = line
+	self.scret = line
 
 	return obj
 end
 
-return scarg
-
+return scret

@@ -114,6 +114,33 @@ function syscall:compat_level()
 	return native
 end
 
+-- NOTE: going to add this now, and integrate it later, want to sort out
+-- dealing with args as an isolated process for now
+local function addargs(line)
+    if not self.expect_rbrace then
+		-- exit condition, this procedure shouldn't proceed
+        if line:match("%);$") then
+			self.expect_rbrace = true
+			return false
+		end
+
+        -- scarg is going to instantiate itself with its own methods
+	    local arg = scarg:new({ }, line)
+        if not arg:init() then
+            -- preparation of arg failed, err handling
+            return false
+        end 
+        if not arg:process() then
+            -- arg type was void, don't need to add, so we can exit
+            return false
+        end
+        
+        table.insert(self.args, arg:add())
+        -- arg added, exit
+        return false
+	end
+end
+
 --
 -- We build up the system call one line at a time, as we pass through 4 states
 -- We don't have an explicit state name here, but maybe we should
@@ -145,26 +172,25 @@ function syscall:add(line)
 		end
 		self.rettype = words[1]
 		self.name = words[2]:match("([%w_]+)%(")
+        -- checks for ");"
 		if words[2]:match("%);$") then
+            -- now we're looking for ending curly brace
 			self.expect_rbrace = true
 		end
 		return false
 	end
 
-	-- eating args
-	if not self.expect_rbrace then
-		-- We're looking for (another) argument
-		-- xxx copout for the moment and just snarf the argument
-		-- some have trailing , on last arg
-		if line:match("%);$") then
-			self.expect_rbrace = true
-			return false
-		end
+	-- we passed last state and didn't find ");", we're looking for args
+    addargs(line);
+	--	if line:match("%);$") then
+	--		self.expect_rbrace = true
+	--		return false
+	--	end
 
-		local arg = scarg:new({ }, line)
-		table.insert(self.args, arg)
-		return false
-	end
+	--	local arg = scarg:new({ }, line)
+	--	table.insert(self.args, arg)
+	--	return false
+	--end
 
 	-- state wrapping up, can only get } here
 	if not line:match("}$") then

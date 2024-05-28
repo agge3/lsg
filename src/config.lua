@@ -19,9 +19,67 @@
 -- the map this returns into the global config map since that's likely to be the
 -- same everywhere.
 
+-- xxx As of now, answer is the latter. Approaching that problem and deciding
+-- as project further develops. Might do some wonky things until the solution is
+-- decided upon.
+-- xxx Also, keeping track of config[key: changes_abi, value: true/false] is 
+-- going to entail exactly that. Need to sort out how to handle that.
+
 local config = {}
 
 local util = require("util")
+
+-- Each entry should have a value so we can represent abi flags as a bitmask
+-- for convenience.  One may also optionally provide an expr; this gets applied
+-- to each argument type to indicate whether this argument is subject to ABI
+-- change given the configured flags.
+config.known_abi_flags = {
+	long_size = {
+		value	= 0x00000001,
+		exprs	= {
+			"_Contains[a-z_]*_long_",
+			"^long [a-z0-9_]+$",
+			"long [*]",
+			"size_t [*]",
+			-- semid_t is not included because it is only used
+			-- as an argument or written out individually and
+			-- said writes are handled by the ksem framework.
+			-- Technically a sign-extension issue exists for
+			-- arguments, but because semid_t is actually a file
+			-- descriptor negative 32-bit values are invalid
+			-- regardless of sign-extension.
+		},
+	},
+	time_t_size = {
+		value	= 0x00000002,
+		exprs	= {
+			"_Contains[a-z_]*_timet_",
+		},
+	},
+	pointer_args = {
+		value	= 0x00000004,
+	},
+	pointer_size = {
+		value	= 0x00000008,
+		exprs	= {
+			"_Contains[a-z_]*_ptr_",
+			"[*][*]",
+		},
+	},
+	pair_64bit = {
+		value	= 0x00000010,
+		exprs	= {
+			"^dev_t[ ]*$",
+			"^id_t[ ]*$",
+			"^off_t[ ]*$",
+		},
+	},
+}
+
+-- xxx haven't got to these things yet
+local config_modified = {}
+local cleantmp = true
+local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
 
 -- config looks like a shell script; in fact, the previous makesyscalls.sh
 -- script actually sourced it in.  It had a pretty common format, so we should
@@ -90,5 +148,42 @@ function config.process(file)
 	assert(io.close(fh))
 	return cfg
 end
+
+-- FOR abi_changes()
+function config.abi_changes(name)
+    local abi_flags_mask = 0
+	if config.known_abi_flags[name] == nil then
+		util.abort(1, "abi_changes: unknown flag: " .. name)
+	end
+
+	return abi_flags_mask & config.known_abi_flags[name].value ~= 0
+end
+
+-- xxx putting these here for now
+--local function process_abi_flags()
+--	local flags, mask = config.abi_flags, 0
+--	for txtflag in flags:gmatch("([^|]+)") do
+--		if known_abi_flags[txtflag] == nil then
+--			abort(1, "Unknown abi_flag: " .. txtflag)
+--		end
+--
+--		mask = mask | known_abi_flags[txtflag].value
+--	end
+--
+--	config.abi_flags_mask = mask
+--end
+--
+---- FOR changes_abi
+--local function process_syscall_abi_change()
+--	local changes_abi = config.syscall_abi_change
+--	for syscall in changes_abi:gmatch("([^ ]+)") do
+--		config.sys_abi_change[syscall] = true
+--	end
+--
+--	local no_changes = config.syscall_no_abi_change
+--	for syscall in no_changes:gmatch("([^ ]+)") do
+--		config.sys_no_abi_change[syscall] = true
+--	end
+--end
 
 return config
