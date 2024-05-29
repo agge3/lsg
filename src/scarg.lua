@@ -216,7 +216,7 @@ function scarg:new(obj, line)
 
     self.scarg = strip_arg_annotations(self.scarg)
     self.name = self.scarg:match("([^* ]+)$")
-    self.type = util.trim(scarg:gsub(self.name .. "$", ""), nil) 
+    self.type = util.trim(self.scarg:gsub(self.name .. "$", ""), nil) 
 
     util.trim(self.scarg, ",")
 

@@ -59,7 +59,7 @@ function FreeBSDSyscall:parse_sysfile()
 		elseif line:match("^#%s*include") then
 			incs = incs .. line .. "\n"
 		elseif line:match("%%ABI_HEADERS%%") then
-			local h= self.config.abi_headers
+			local h = self.config.abi_headers
 			if h ~= nil and h ~= "" then
 				incs = incs .. h .. "\n"
 			end
@@ -69,22 +69,17 @@ function FreeBSDSyscall:parse_sysfile()
 			abort(1, "Unsupported cpp op " .. line)
 		else
 			s = syscall:new()
-			if s:is_added(line) then
+			if s:add(line) then
 				-- append to syscall list
 				for t in s:iter() do
 					table.insert(self.syscalls, t)
 				end
 				s = nil
-            -- all of these have guarded entries, so we're safe to call like this
-			else -- xxx not 100% happy with this, but works for now
-                s:adddef(line)
-                s:addfunc(line)
-                s:addargs(line)
             end
 		end
 	end
 	if s ~= nil then
-		abort(1, "Dangling system call at the end")
+		util.abort(1, "Dangling system call at the end")
 	end
 
 	assert(io.close(fh))
