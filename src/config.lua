@@ -77,9 +77,9 @@ config.known_abi_flags = {
 }
 
 -- xxx haven't got to these things yet
-local config_modified = {}
-local cleantmp = true
-local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
+--local config_modified = {}
+--local cleantmp = true
+--local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
 
 -- config looks like a shell script; in fact, the previous makesyscalls.sh
 -- script actually sourced it in.  It had a pretty common format, so we should

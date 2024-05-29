@@ -114,7 +114,7 @@ function syscall:compat_level()
 	return native
 end
 
-function scarg:adddef(line)
+function syscall:adddef(line)
 	local words = util.split(line, "%S+")
 
 	-- starting
@@ -122,8 +122,10 @@ function scarg:adddef(line)
 		-- sort out range somehow XXX
 		-- Also, where to put validation of no skipped syscall #? XXX
 		self.num = words[1]
+        print(self.num)
 		self.audit = words[2]
 		self.type = util.SetFromString(words[3], "[^|]+")
+        print(self.type)
 		check_type(line, self.type)
 		self.name = words[4]
 		-- These next three are optional, and either all present or all absent
@@ -134,9 +136,7 @@ function scarg:adddef(line)
 	end
 end
 
-function scarg:addfunc(line)
-	local words = util.split(line, "%S+")
-
+function syscall:addfunc(line, words)
 	-- parse function name
 	if self.name == "{" then
 		-- Expect line is "type syscall(" or "type syscall(void);"
@@ -154,12 +154,11 @@ function scarg:addfunc(line)
 	end
 end
 
-function scarg:addargs(line)
+function syscall:addargs(line)
     if not self.expect_rbrace then
 		-- exit condition, this procedure shouldn't proceed
         if line:match("%);$") then
             self.expect_rbrace = true
-            self.adding = false
 			return false
 		end
 
@@ -175,13 +174,14 @@ function scarg:addargs(line)
 end
 
 -- xxx needs the most attention, but works for now
-function scarg:is_added(line)
-	-- state wrapping up, can only get } here
-	if not line:match("}$") then
-		util.abort(1, "Expected '}' found '" .. line .. "' instead.")
-	end
+function syscall:is_added(line)
     if not self.adding then
-	    return true
+	-- state wrapping up, can only get } here
+	    if not line:match("}$") then
+	    	util.abort(1, "Expected '}' found '" .. line .. "' instead.")
+	    end
+	return true
+    end
 end
 
 --
@@ -193,6 +193,7 @@ end
 --         ABORT, with error
 --
 function syscall:add(line)
+	local words = util.split(line, "%S+")
 
 	-- going to return false, 
     -- starting
@@ -228,18 +229,22 @@ function syscall:add(line)
 	end
 
 	-- we passed last state and didn't find ");", we're looking for args
-    if not addargs(line) then
-        self.expect_rbrace = false
-    end
-	--	if line:match("%);$") then
-	--		self.expect_rbrace = true
-	--		return false
-	--	end
-
-	--	local arg = scarg:new({ }, line)
-	--	table.insert(self.args, arg)
-	--	return false
-	--end
+	if not self.expect_rbrace then
+		if line:match("%);$") then
+			self.expect_rbrace = true
+			return false
+		end
+        -- scarg is going to instantiate itself with its own methods
+	    local arg = scarg:new({ }, line)
+        -- if arg processes, then add. if not, don't need to add
+        if arg:process() then 
+            table.insert(self.args, arg:add())
+        end
+        return false
+	end
+    --if not self:addargs(line) then
+    --    return false
+    --end
 
 	-- state wrapping up, can only get } here
 	if not line:match("}$") then
@@ -255,7 +260,6 @@ function syscall:new(obj)
 
 	self.expect_rbrace = false
 	self.args = { }
-    self.adding = true
 
 	return obj
 end
