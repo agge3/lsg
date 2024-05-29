@@ -114,41 +114,88 @@ function syscall:compat_level()
 	return native
 end
 
--- NOTE: going to add this now, and integrate it later, want to sort out
--- dealing with args as an isolated process for now
-local function addargs(line)
+function scarg:adddef(line)
+	local words = util.split(line, "%S+")
+
+	-- starting
+	if self.num == nil then
+		-- sort out range somehow XXX
+		-- Also, where to put validation of no skipped syscall #? XXX
+		self.num = words[1]
+		self.audit = words[2]
+		self.type = util.SetFromString(words[3], "[^|]+")
+		check_type(line, self.type)
+		self.name = words[4]
+		-- These next three are optional, and either all present or all absent
+		self.altname = words[5]
+		self.alttag = words[6]
+		self.altrtyp = words[7]
+		return self.name ~= "{" -- xxx don't have a solution to this condition yet
+	end
+end
+
+function scarg:addfunc(line)
+	local words = util.split(line, "%S+")
+
+	-- parse function name
+	if self.name == "{" then
+		-- Expect line is "type syscall(" or "type syscall(void);"
+		if #words ~= 2 then
+			util.abort(1, "Malformed line " .. line)
+		end
+		self.rettype = words[1]
+		self.name = words[2]:match("([%w_]+)%(")
+        -- checks for ");"
+		if words[2]:match("%);$") then
+            -- now we're looking for ending curly brace
+			self.expect_rbrace = true
+		end
+		return false -- xxx same as before, not 100% on doing it as a void fn yet
+	end
+end
+
+function scarg:addargs(line)
     if not self.expect_rbrace then
 		-- exit condition, this procedure shouldn't proceed
         if line:match("%);$") then
-			self.expect_rbrace = true
+            self.expect_rbrace = true
+            self.adding = false
 			return false
 		end
 
         -- scarg is going to instantiate itself with its own methods
 	    local arg = scarg:new({ }, line)
-        if not arg:init() then
-            -- preparation of arg failed, err handling
-            return false
-        end 
-        if not arg:process() then
-            -- arg type was void, don't need to add, so we can exit
-            return false
+        -- if arg processes, then add. if not, don't need to add
+        if arg:process() then 
+            table.insert(self.args, arg:add())
         end
-        
-        table.insert(self.args, arg:add())
         -- arg added, exit
         return false
 	end
+end
+
+-- xxx needs the most attention, but works for now
+function scarg:is_added(line)
+	-- state wrapping up, can only get } here
+	if not line:match("}$") then
+		util.abort(1, "Expected '}' found '" .. line .. "' instead.")
+	end
+    if not self.adding then
+	    return true
 end
 
 --
 -- We build up the system call one line at a time, as we pass through 4 states
 -- We don't have an explicit state name here, but maybe we should
 --
+-- RETURN: TRUE, if syscall processing successful (and ready to add).
+--         FALSE, if still processing
+--         ABORT, with error
+--
 function syscall:add(line)
-	local words = util.split(line, "%S+")
 
-	-- starting
+	-- going to return false, 
+    -- starting
 	if self.num == nil then
 		-- sort out range somehow XXX
 		-- Also, where to put validation of no skipped syscall #? XXX
@@ -181,7 +228,9 @@ function syscall:add(line)
 	end
 
 	-- we passed last state and didn't find ");", we're looking for args
-    addargs(line);
+    if not addargs(line) then
+        self.expect_rbrace = false
+    end
 	--	if line:match("%);$") then
 	--		self.expect_rbrace = true
 	--		return false
@@ -206,6 +255,7 @@ function syscall:new(obj)
 
 	self.expect_rbrace = false
 	self.args = { }
+    self.adding = true
 
 	return obj
 end

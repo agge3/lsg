@@ -69,13 +69,18 @@ function FreeBSDSyscall:parse_sysfile()
 			abort(1, "Unsupported cpp op " .. line)
 		else
 			s = syscall:new()
-			if s:add(line) then
+			if s:is_added(line) then
 				-- append to syscall list
 				for t in s:iter() do
 					table.insert(self.syscalls, t)
 				end
 				s = nil
-			end
+            -- all of these have guarded entries, so we're safe to call like this
+			else -- xxx not 100% happy with this, but works for now
+                s:adddef(line)
+                s:addfunc(line)
+                s:addargs(line)
+            end
 		end
 	end
 	if s ~= nil then

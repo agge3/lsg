@@ -98,7 +98,7 @@ end
 -- to work both before and after the substitution
 local function isptrtype(type)
 	return type:find("*") or type:find("caddr_t") or
-	    type:find("intptr_t") or type:find(config.abi_intptr_t)
+	    type:find("intptr_t") or type:find(default.abi_intptr_t)
 end
 
 local function isptrarraytype(type)
@@ -111,29 +111,11 @@ local function is64bittype(type)
         or type:find("^off_t[ ]*$")
 end
 
--- xxx should just work as is
 local function strip_arg_annotations(arg)
 	arg = arg:gsub("_Contains_[^ ]*[_)] ?", "")
 	arg = arg:gsub("_In[^ ]*[_)] ?", "")
 	arg = arg:gsub("_Out[^ ]*[_)] ?", "")
 	return util.trim(arg)
-end
-
-function scarg:init()
-    -- xxx could just go in default constructor. want feedback on that
-	self.local_abi_change = check_abi_changes(self.scarg)
-	self.global_abi_change = self.global_abi_change or self.local_abi_change
-
-    self.scarg = util.strip_arg_annotations(self.scarg)
-    self.name = self.scarg:match("([^* ]+)$")
-    self.type = util.trim(scarg:gsub(self.name .. "$", ""), nil) 
-
-    util.trim(self.scarg, ",")
-
-    return true
-
-    -- err handling
-    -- return false
 end
 
 -- RETURN: TRUE, argument has type and needs to be added (is now processed).
@@ -146,17 +128,19 @@ function scarg:process()
                                  (config.abi_changes("pair_64bit") and 
                                  is64bittype(self.type))
 
-		self.type = _argtype:gsub("intptr_t", default.abi_intptr_t)
-		self.type = _argtype:gsub("semid_t", default.abi_semid_t)
+		self.type = self.type:gsub("intptr_t", default.abi_intptr_t)
+		self.type = self.type:gsub("semid_t", default.abi_semid_t)
+
 		if isptrtype(self.type) then
 			self.type = self.type:gsub("size_t", default.abi_size_t)
 			self.type = self.type:gsub("^long", default.abi_long);
 			self.type = self.type:gsub("^u_long", default.abi_u_long);
 			self.type = self.type:gsub("^const u_long", "const " 
-                    .. default.abi_u_long);
+                    .. default.abi_u_long)
 		elseif self.type:find("^long$") then
 			self.type = default.abi_long
 		end
+
 		if isptrarraytype(self.type) and default.abi_ptr_array_t ~= "" then
 			-- `* const *` -> `**`
             self.type = self.type:gsub("[*][ ]*const[ ]*[*]", "**")
@@ -181,7 +165,7 @@ function scarg:process()
 end
 
 function scarg:add()
-    if config.abi_changes("pair_64bit") and util.is64bittype(self.type) then
+    if config.abi_changes("pair_64bit") and is64bittype(self.type) then
         -- xxx will need to figure out how to handle this padding, since we don't
         -- see the global table
     	--if #self.funcargs % 2 == 1 then
@@ -225,6 +209,16 @@ function scarg:new(obj, line)
     self.global_abi_change = false -- xxx needs to be k, v in cfg table
     -- xxx could also leave this here and have it merge into cfg tbl as part of
     -- destructor. Make that work in lua.
+
+    -- xxx putting in default constructor. want feedback on that
+	self.local_abi_change = check_abi_changes(self.scarg)
+	self.global_abi_change = self.global_abi_change or self.local_abi_change
+
+    self.scarg = strip_arg_annotations(self.scarg)
+    self.name = self.scarg:match("([^* ]+)$")
+    self.type = util.trim(scarg:gsub(self.name .. "$", ""), nil) 
+
+    util.trim(self.scarg, ",")
 
 	return obj
 end
