@@ -9,6 +9,7 @@
 
 local config = require("config")
 local util = require("util")
+require("test.dump")
 
 local scarg = {}
 
@@ -118,6 +119,16 @@ local function strip_arg_annotations(arg)
 	return util.trim(arg)
 end
 
+function scarg:init()
+    self.local_abi_change = check_abi_changes(self.scarg)
+	self.global_abi_change = self.global_abi_change or self.local_abi_change
+
+    self.scarg = strip_arg_annotations(self.scarg)
+    self.scarg = util.trim(self.scarg, ',')
+    self.name = self.scarg:match("([^* ]+)$")
+    self.type = util.trim(self.scarg:gsub(self.name .. "$", ""), nil) 
+end
+
 -- RETURN: TRUE, argument has type and needs to be added (is now processed).
 --         FALSE, argument type is void, it doesn't need to be added.
 function scarg:process()
@@ -210,15 +221,7 @@ function scarg:new(obj, line)
     -- xxx could also leave this here and have it merge into cfg tbl as part of
     -- destructor. Make that work in lua.
 
-    -- xxx putting in default constructor. want feedback on that
-	self.local_abi_change = check_abi_changes(self.scarg)
-	self.global_abi_change = self.global_abi_change or self.local_abi_change
-
-    self.scarg = strip_arg_annotations(self.scarg)
-    self.name = self.scarg:match("([^* ]+)$")
-    self.type = util.trim(self.scarg:gsub(self.name .. "$", ""), nil) 
-
-    util.trim(self.scarg, ",")
+    obj:init()
 
 	return obj
 end

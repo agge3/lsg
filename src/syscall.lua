@@ -6,6 +6,7 @@
 
 scarg = require("scarg")
 util = require("util")
+require("test.dump")
 
 local syscall = {}
 
@@ -116,141 +117,96 @@ end
 
 function syscall:adddef(line)
 	local words = util.split(line, "%S+")
-
-	-- starting
-	if self.num == nil then
-		-- sort out range somehow XXX
-		-- Also, where to put validation of no skipped syscall #? XXX
-		self.num = words[1]
-        print(self.num)
-		self.audit = words[2]
-		self.type = util.SetFromString(words[3], "[^|]+")
-        print(self.type)
-		check_type(line, self.type)
-		self.name = words[4]
-		-- These next three are optional, and either all present or all absent
-		self.altname = words[5]
-		self.alttag = words[6]
-		self.altrtyp = words[7]
-		return self.name ~= "{" -- xxx don't have a solution to this condition yet
-	end
+    if self.num == nil then
+	    -- sort out range somehow XXX
+	    -- Also, where to put validation of no skipped syscall #? XXX
+        -- xxx potentially in iter()
+	    self.num = words[1]
+	    self.audit = words[2]
+	    self.type = util.SetFromString(words[3], "[^|]+")
+	    check_type(line, self.type)
+	    self.name = words[4]
+	    -- These next three are optional, and either all present or all absent
+	    self.altname = words[5]
+	    self.alttag = words[6]
+	    self.altrtyp = words[7]
+        dump(self.name)
+	    return self.name == "{"
+    end
+    return false
 end
 
-function syscall:addfunc(line, words)
-	-- parse function name
-	if self.name == "{" then
-		-- Expect line is "type syscall(" or "type syscall(void);"
-		if #words ~= 2 then
-			util.abort(1, "Malformed line " .. line)
-		end
-		self.rettype = words[1]
-		self.name = words[2]:match("([%w_]+)%(")
+function syscall:addfunc(line)
+	local words = util.split(line, "%S+")
+    if self.name == "{" then
+	    -- Expect line is "type syscall(" or "type syscall(void);"
+	    if #words ~= 2 then
+	    	util.abort(1, "Malformed line " .. line)
+	    end
+	    self.rettype = words[1]
+	    self.name = words[2]:match("([%w_]+)%(")
         -- checks for ");"
-		if words[2]:match("%);$") then
+	    if words[2]:match("%);$") then
             -- now we're looking for ending curly brace
-			self.expect_rbrace = true
-		end
-		return false -- xxx same as before, not 100% on doing it as a void fn yet
-	end
+	    	self.expect_rbrace = true
+	    end
+        return true
+    end
+    return false
 end
 
 function syscall:addargs(line)
-    if not self.expect_rbrace then
-		-- exit condition, this procedure shouldn't proceed
-        if line:match("%);$") then
-            self.expect_rbrace = true
-			return false
-		end
+	if not self.expect_rbrace then
+	    if line:match("%);$") then
+            -- don't want to expect args, exit
+	    	self.expect_rbrace = true
+	    	return true
+	    end
 
         -- scarg is going to instantiate itself with its own methods
 	    local arg = scarg:new({ }, line)
-        -- if arg processes, then add. if not, don't need to add
+        -- if arg processes, then add. if not, don't add
         if arg:process() then 
             table.insert(self.args, arg:add())
         end
-        -- arg added, exit
-        return false
-	end
+        return true
+    end
+    return false
 end
 
--- xxx needs the most attention, but works for now
 function syscall:is_added(line)
-    if not self.adding then
 	-- state wrapping up, can only get } here
-	    if not line:match("}$") then
-	    	util.abort(1, "Expected '}' found '" .. line .. "' instead.")
-	    end
-	return true
+	if not line:match("}$") then
+	    util.abort(1, "Expected '}' found '" .. line .. "' instead.")
+	end
+    -- confirm syscall was added successfully
+	if self.args ~= nil then
+        return true
     end
+    return false
 end
 
 --
 -- We build up the system call one line at a time, as we pass through 4 states
--- We don't have an explicit state name here, but maybe we should
---
 -- RETURN: TRUE, if syscall processing successful (and ready to add).
 --         FALSE, if still processing
 --         ABORT, with error
 --
 function syscall:add(line)
-	local words = util.split(line, "%S+")
-
-	-- going to return false, 
-    -- starting
-	if self.num == nil then
-		-- sort out range somehow XXX
-		-- Also, where to put validation of no skipped syscall #? XXX
-		self.num = words[1]
-		self.audit = words[2]
-		self.type = util.SetFromString(words[3], "[^|]+")
-		check_type(line, self.type)
-		self.name = words[4]
-		-- These next three are optional, and either all present or all absent
-		self.altname = words[5]
-		self.alttag = words[6]
-		self.altrtyp = words[7]
-		return self.name ~= "{"
-	end
-
-	-- parse function name
-	if self.name == "{" then
-		-- Expect line is "type syscall(" or "type syscall(void);"
-		if #words ~= 2 then
-			util.abort(1, "Malformed line " .. line)
-		end
-		self.rettype = words[1]
-		self.name = words[2]:match("([%w_]+)%(")
-        -- checks for ");"
-		if words[2]:match("%);$") then
-            -- now we're looking for ending curly brace
-			self.expect_rbrace = true
-		end
-		return false
-	end
-
-	-- we passed last state and didn't find ");", we're looking for args
-	if not self.expect_rbrace then
-		if line:match("%);$") then
-			self.expect_rbrace = true
-			return false
-		end
-        -- scarg is going to instantiate itself with its own methods
-	    local arg = scarg:new({ }, line)
-        -- if arg processes, then add. if not, don't need to add
-        if arg:process() then 
-            table.insert(self.args, arg:add())
-        end
+    if self:adddef(line) then
         return false
-	end
-    --if not self:addargs(line) then
-    --    return false
-    --end
-
-	-- state wrapping up, can only get } here
-	if not line:match("}$") then
-		util.abort(1, "Expected '}' found '" .. line .. "' instead.")
-	end
-	return true
+    end
+    if self:addfunc(line) then
+        return false
+    end
+    if self:addargs(line) then
+        dump(self.args)
+        return false
+    end
+    if self:is_added(line) then
+        return true
+    end
+    -- xxx seems like there should be more error handling
 end
 
 function syscall:new(obj)
