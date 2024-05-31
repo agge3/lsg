@@ -66,7 +66,7 @@ function FreeBSDSyscall:parse_sysfile()
 		elseif line:match("^#%s*define") then
 			defs = defs .. line.. "\n"
 		elseif line:match("^#") then
-			abort(1, "Unsupported cpp op " .. line)
+			util.abort(1, "Unsupported cpp op " .. line)
 		else
 			s = syscall:new()
 			if s:add(line) then
