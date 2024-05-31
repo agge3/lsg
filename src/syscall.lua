@@ -6,7 +6,6 @@
 
 scarg = require("scarg")
 util = require("util")
-require("test.dump")
 
 local syscall = {}
 
@@ -115,8 +114,7 @@ function syscall:compat_level()
 	return native
 end
 
-function syscall:adddef(line)
-	local words = util.split(line, "%S+")
+function syscall:adddef(line, words)
     if self.num == nil then
 	    -- sort out range somehow XXX
 	    -- Also, where to put validation of no skipped syscall #? XXX
@@ -130,14 +128,12 @@ function syscall:adddef(line)
 	    self.altname = words[5]
 	    self.alttag = words[6]
 	    self.altrtyp = words[7]
-        dump(self.name)
 	    return self.name == "{"
     end
     return false
 end
 
-function syscall:addfunc(line)
-	local words = util.split(line, "%S+")
+function syscall:addfunc(line, words)
     if self.name == "{" then
 	    -- Expect line is "type syscall(" or "type syscall(void);"
 	    if #words ~= 2 then
@@ -150,15 +146,17 @@ function syscall:addfunc(line)
             -- now we're looking for ending curly brace
 	    	self.expect_rbrace = true
 	    end
+        self.adding_args = true
         return true
     end
     return false
 end
 
 function syscall:addargs(line)
-	if not self.expect_rbrace then
+	if self.adding_args and not self.expect_rbrace then
 	    if line:match("%);$") then
             -- don't want to expect args, exit
+            self.adding_args = false
 	    	self.expect_rbrace = true
 	    	return true
 	    end
@@ -176,11 +174,10 @@ end
 
 function syscall:is_added(line)
 	-- state wrapping up, can only get } here
-	if not line:match("}$") then
-	    util.abort(1, "Expected '}' found '" .. line .. "' instead.")
-	end
-    -- confirm syscall was added successfully
-	if self.args ~= nil then
+    if self.expect_rbrace then
+	    if not line:match("}$") then
+	        util.abort(1, "Expected '}' found '" .. line .. "' instead.")
+	    end
         return true
     end
     return false
@@ -193,20 +190,21 @@ end
 --         ABORT, with error
 --
 function syscall:add(line)
-    if self:adddef(line) then
+    local words = util.split(line, "%S+")
+    if self:adddef(line, words) then
         return false
     end
-    if self:addfunc(line) then
+    if self:addfunc(line, words) then
         return false
     end
     if self:addargs(line) then
-        dump(self.args)
         return false
     end
+    -- xxx this needs attention
     if self:is_added(line) then
-        return true
+        -- do nothing
     end
-    -- xxx seems like there should be more error handling
+    return true
 end
 
 function syscall:new(obj)
@@ -215,6 +213,7 @@ function syscall:new(obj)
 	self.__index = self
 
 	self.expect_rbrace = false
+    self.adding_args = false
 	self.args = { }
 
 	return obj
@@ -240,6 +239,7 @@ end
 -- ones are more copy and so we should just return the object we just made w/o
 -- an extra clone.
 function syscall:iter()
+    --print("entering iter")
 	local s = tonumber(self.num)
 	local e
 	if s == nil then

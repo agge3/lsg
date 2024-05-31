@@ -9,7 +9,6 @@
 
 local config = require("config")
 local util = require("util")
-require("test.dump")
 
 local scarg = {}
 
@@ -185,6 +184,7 @@ function scarg:add()
     	--		name = "_pad",
     	--	}
     	--end
+
 
         -- since we're creating a new table with each scarg obj, it's OK to assume
         -- idx at 1
