@@ -17,12 +17,11 @@
 -- available in ports.  Currently, this script is compatible with lua from ports
 -- along with the compatible luafilesystem and lua-posix modules.
 
+-- The FreeBSD syscall generator
 local FreeBSDSyscall = require("freebsd-syscall")
-						-- The FreeBSD syscall generator
-local config = require("config")		-- Common config file mgt
 
--- Globals
-local generated_tag = "@" .. "generated"
+-- Common config file mgt
+local config = require("config")		
 
 -- Default configuration; any of these may get replaced by a configuration file
 -- optionally specified. A lot of these are passed into the fbsd_sys parser and

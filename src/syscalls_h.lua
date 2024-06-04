@@ -28,8 +28,7 @@ end
 local FreeBSDSyscall = require("freebsd-syscall")
 
 local config = require("config")		-- Common config file mgt
-
-local generated_tag = "@" .. "generated"
+local util = require("util")
 
 -- Globals
 
@@ -49,12 +48,7 @@ local function gen_syscalls_mk(tbl, cfg)
 	local s = tbl.syscalls
 	local max = 0
 
-	print(string.format([[/*
- * System call numbers.
- *
- * DO NOT EDIT-- this file is automatically %s.
- */
-]], generated_tag))
+	util.generated_tag("System call numbers.")
 
 	for k, v in pairs(s) do
 		local c = v:compat_level()

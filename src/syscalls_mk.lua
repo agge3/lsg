@@ -28,6 +28,7 @@ end
 local FreeBSDSyscall = require("freebsd-syscall")
 
 local config = require("config")		-- Common config file mgt
+local util = require("util")
 
 -- Globals
 
