@@ -20,28 +20,8 @@ scarg.__index = scarg
 -- Default configuration; any of these may get replaced by a configuration file
 -- optionally specified.
 local default = {
-	os_id_keyword = "FreeBSD",		-- obsolete, ignored on input, not generated
 	abi_func_prefix = "",
-	libsysmap = "/dev/null",
-	libsys_h = "/dev/null",
-	sysnames = "syscalls.c",
-	sysproto = "../sys/sysproto.h",
-	sysproto_h = "_SYS_SYSPROTO_H_",
-	syshdr = "../sys/syscall.h",
-	sysmk = "/dev/null",
-	syssw = "init_sysent.c",
-	syscallprefix = "SYS_",
-	switchname = "sysent",
-	namesname = "syscallnames",
-	systrace = "systrace_args.c",
-	capabilities_conf = "capabilities.conf",
-	capenabled = {},
-	compat_set = "native",
-	mincompat = 0,
 	abi_type_suffix = "",
-	abi_flags = "",
-	abi_flags_mask = 0,
-	abi_headers = "",
 	abi_intptr_t = "intptr_t",
 	abi_size_t = "size_t",
 	abi_u_long = "u_long",
@@ -49,14 +29,6 @@ local default = {
 	abi_semid_t = "semid_t",
 	abi_ptr_array_t = "",
 	ptr_intptr_t_cast = "intptr_t",
-	syscall_abi_change = "",
-	sys_abi_change = {},
-	syscall_no_abi_change = "",
-	sys_no_abi_change = {},
-	obsol = "",
-	obsol_dict = {},
-	unimpl = "",
-	unimpl_dict = {},
     -- NOTE: putting these here temporarily, in case they're needed
     abi_flags_mask = 0,
     abi_flags = "",
@@ -162,9 +134,9 @@ function scarg:process()
 		if self.local_abi_change then
 			local abi_type_suffix = default.abi_type_suffix
 			self.type = self.type:gsub("(struct [^ ]*)", "%1" ..
-			    abi_type_suffix)
+			    default.abi_type_suffix)
 			self.type = self.type:gsub("(union [^ ]*)", "%1" ..
-			    abi_type_suffix)
+			    default.abi_type_suffix)
 		end
 
         return true

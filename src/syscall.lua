@@ -5,6 +5,7 @@
 --
 
 scarg = require("scarg")
+scret = require("scret")
 util = require("util")
 
 local syscall = {}
@@ -136,10 +137,8 @@ end
 function syscall:addfunc(line, words)
     if self.name == "{" then
 	    -- Expect line is "type syscall(" or "type syscall(void);"
-	    if #words ~= 2 then
-	    	util.abort(1, "Malformed line " .. line)
-	    end
-	    self.rettype = words[1]
+	    local ret = scret:new({ }, line)
+        self.rettype = ret:add()
 	    self.name = words[2]:match("([%w_]+)%(")
         -- checks for ");"
 	    if words[2]:match("%);$") then
@@ -239,7 +238,6 @@ end
 -- ones are more copy and so we should just return the object we just made w/o
 -- an extra clone.
 function syscall:iter()
-    --print("entering iter")
 	local s = tonumber(self.num)
 	local e
 	if s == nil then
