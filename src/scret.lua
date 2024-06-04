@@ -4,6 +4,12 @@
 -- Copyright (c) 2024 Tyler Baxter <agge@freebsd.org>
 --
 
+-- Derived in large part from makesyscalls.lua:
+--
+-- SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+--
+-- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
+
 local config = require("config")
 local util = require("util")
 
