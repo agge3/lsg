@@ -12,3 +12,7 @@
 --
 -- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
 --
+
+local cfg = {
+    ptr_intptr_t_cast = "intptr_t"
+}
