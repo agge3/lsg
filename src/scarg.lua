@@ -5,6 +5,12 @@
 -- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 
+-- Derived in large part from makesyscalls.lua:
+--
+-- SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+--
+-- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
+
 -- class scarg provides an interface for syscall arguments, in the parsing state.
 
 local config = require("config")
