@@ -1,7 +1,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2023 Tyler Baxter <agge@FreeBSD.org>
+-- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 
 local scproto = {}
