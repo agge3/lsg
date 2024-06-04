@@ -13,6 +13,14 @@
 -- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
 --
 
+local config = require("config")
+local util = require("util")
+
 local cfg = {
     ptr_intptr_t_cast = "intptr_t"
 }
+
+local function gen_systrace_args(tbl, cfg)
+    -- xxx not going to have correct output
+    util.generated_tag("System call argument to DTrace register array converstion")
+end

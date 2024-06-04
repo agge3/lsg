@@ -53,4 +53,15 @@ function util.SetFromString(str, re)
 	return s
 end
 
+-- xxx add optional parameter for different comments (sh comments)
+function util.generated_tag(str)
+    local tag = "@" .. "generated"
+    print(string.format([[/*
+ * %s
+ *
+ * DO NOT EDIT-- this file is automatically %s.
+ */
+]], str, tag))
+end
+
 return util

@@ -28,7 +28,7 @@ end
 local FreeBSDSyscall = require("freebsd-syscall")
 
 local config = require("config")		-- Common config file mgt
-local generated_tag = "@" .. "generated"
+local util = require("util")
 
 -- Globals
 
@@ -49,14 +49,8 @@ local config ={
 -- xxx need compat call count
 
 local function gen_init_sysent(tbl, config)
-	print(string.format[[
-/*
- * System call switch table.
- *
- * DO NOT EDIT-- this file is automatically %s.
- */
+    util.generated_tag("System call switch table.")
 
-]], generated_tag))
 	print(tbl.includes)
 	print("\n#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))")
 

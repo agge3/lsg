@@ -13,6 +13,13 @@
 -- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
 --
 
+local config = require("config")
+local util = require("util")
+
 local cfg = {
     syscallprefix = "SYS_"
 }
+
+local function gen_sysproto_h(tbl, cfg)
+    util.generated_tag("System call prototypes.")
+end
