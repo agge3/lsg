@@ -53,15 +53,42 @@ function util.SetFromString(str, re)
 	return s
 end
 
--- xxx add optional parameter for different comments (sh comments)
-function util.generated_tag(str)
+-- Prints the generated tag.
+-- @param str
+-- The title of the file.
+-- @param [comment]
+-- Default comment style is C-style. Optional to change comment style.
+-- (Will still follow C-style indentation.)
+-- @note Handles multi-line titles, deliminated by newlines.
+function util.generated_tag(str, comment)
+    local comment_start = comment or "/*"
+    local comment_middle = comment or "*"
+    local comment_end = comment or "*/"
     local tag = "@" .. "generated"
-    print(string.format([[/*
- * %s
- *
- * DO NOT EDIT-- this file is automatically %s.
- */
-]], str, tag))
+
+    -- Don't enter loop if it's the simple case.
+    if str:find("\n") == nil then
+        print(string.format([[%s
+ %s %s
+ %s
+ %s DO NOT EDIT-- this file is automatically %s.
+ %s
+]], comment_start, comment_middle, str, comment_middle, comment_middle, tag, 
+            comment_end)) 
+
+    else
+        print(string.format([[%s]], comment_start))
+        for line in str:gmatch("[^\n]*") do
+            if line ~= nil then
+                print(string.format([[
+ %s %s]], comment_middle, line))
+            end
+        end
+        print(string.format([[ %s
+ %s DO NOT EDIT-- this file is automatically %s
+ %s
+]], comment_middle, comment_middle, tag, comment_end))
+    end
 end
 
 return util
