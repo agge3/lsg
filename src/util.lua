@@ -57,8 +57,8 @@ end
 -- @param str
 -- The title of the file.
 -- @param [comment]
--- Default comment style is C-style. Optional to change comment style.
--- (Will still follow C-style indentation.)
+-- Default comment is C comments. Optional to change comment (e.g., to sh 
+-- comments). Will still follow C-style indentation. @see style(9)
 -- @note Handles multi-line titles, deliminated by newlines.
 function util.generated_tag(str, comment)
     local comment_start = comment or "/*"
@@ -89,6 +89,40 @@ function util.generated_tag(str, comment)
  %s
 ]], comment_middle, comment_middle, tag, comment_end))
     end
+end
+
+-- Checks for pointer types: '*', caddr_t, intptr_t.
+-- @param type
+-- The type to check.
+-- @param [abi]
+-- Optional ABI-specified intptr_t.
+function util.isptrtype(type, abi)
+    local default = "intptr_t" or abi
+	return type:find("*") or type:find("caddr_t") or type:find(default)
+end
+
+function util.isptrarraytype(type)
+	return type:find("[*][*]") or type:find("[*][ ]*const[ ]*[*]")
+end
+
+-- Find types that are always 64-bits wide.
+function util.is64bittype(type)
+	return type:find("^dev_t[ ]*$") or type:find("^id_t[ ]*$") 
+        or type:find("^off_t[ ]*$")
+end
+
+function util.strip_abi_prefix(funcname, abiprefix)
+	local stripped_name
+	if funcname == nil then
+		return nil
+	end
+	if abiprefix ~= "" and funcname:find("^" .. abiprefix) then
+		stripped_name = funcname:gsub("^" .. abiprefix, "")
+	else
+		stripped_name = funcname
+	end
+
+	return stripped_name
 end
 
 return util

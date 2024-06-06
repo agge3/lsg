@@ -30,29 +30,32 @@ local config = {}
 
 local util = require("util")
 
+-- xxx To be added or deleted as necessary. Keeping here until decision is made.
+config.obsol = {}
+config.unimpl = {}
+config.capenabled = {}
+config.sys_no_abi_change = {}
+config.sys_abi_change = {}
+config.abi_flags = ""
+config.compat_set = {}
+local config_modified = {}
+local cleantmp = true
+-- local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
+
+-- Important boolean keys: configuration file optionally specified and changes 
+-- to the default ABI.
+config.config_file = false
+config.changes_abi = false
+
+-- Default configuration; any of these may get replaced by a configuration file
+-- optionally specified.
 config.default = {
     abi_func_prefix = "",
 	abi_type_suffix = "",
     abi_intptr_t = "intptr_t",
 }
 
-config.obsol_dict = {}
-config.unimpl_dict = {}
-config.capenabled = {}
-
--- xxx still sorting these out
-config.sys_no_abi_change = {}
-config.sys_abi_change = {}
-config.abi_flags = ""
-config.compat_set = {}
--- xxx haven't got to these things yet
---local config_modified = {}
---local cleantmp = true
---local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
-
-config.changes_abi = false
-
--- Each entry should have a value so we can represent abi flags as a bitmask
+-- Each entry should have a value so we can represent ABI flags as a bitmask
 -- for convenience.  One may also optionally provide an expr; this gets applied
 -- to each argument type to indicate whether this argument is subject to ABI
 -- change given the configured flags.
@@ -247,36 +250,19 @@ function config.get_mask_pat(pflags)
 	return mask
 end
 
-function config.strip_abi_prefix(funcname)
-	local abiprefix = config.default.abi_func_prefix
-	local stripped_name
-	if funcname == nil then
-		return nil
-	end
-	if abiprefix ~= "" and funcname:find("^" .. abiprefix) then
-		stripped_name = funcname:gsub("^" .. abiprefix, "")
-	else
-		stripped_name = funcname
-	end
-
-	return stripped_name
-end
-
--- Check both literal intptr_t and the abi version because this needs
--- to work both before and after the substitution
-function config.isptrtype(type)
-	return type:find("*") or type:find("caddr_t") or
-	    type:find("intptr_t") or type:find(config.default.abi_intptr_t)
-end
-
-function config.isptrarraytype(type)
-	return type:find("[*][*]") or type:find("[*][ ]*const[ ]*[*]")
-end
-
--- Find types that are always 64-bits wide
-function config.is64bittype(type)
-	return type:find("^dev_t[ ]*$") or type:find("^id_t[ ]*$") 
-        or type:find("^off_t[ ]*$")
+-- Either returns nil and a message, or mutates cfg and cfg_mod based on the 
+-- provided configuration file.
+function config.merge_global(fh, cfg, cfg_mod)
+    if fh ~= nil then
+    	local res = assert(config.process(fh))
+    
+    	for k, v in pairs(res) do
+    		if v ~= cfg[k] then
+    			cfg[k] = v
+    			cfg_mod[k] = true
+    		end
+    	end
+    end
 end
 
 -- xxx putting these here for now
