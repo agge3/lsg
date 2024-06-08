@@ -12,7 +12,6 @@
 -- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
 --
 
-config = require("config")
 util = require("util")
 
 local bsdio = {}
@@ -69,6 +68,18 @@ function bsdio:generated_tag(str, comment)
  %s
 ]], comment_middle, comment_middle, tag, comment_end))
     end
+end
+
+function bsdio:old(compat_level)
+   	--elseif c >= 0 then
+	--	local s
+	--	if c == 0 then
+	--		s = "obsolete"
+	--	elseif c == 3 then
+	--		s = "old"
+	--	else
+	--		s = "freebsd" .. c
+	--	end 
 end
 
 function bsdio:new(obj, fh)
