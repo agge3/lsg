@@ -90,19 +90,7 @@ local sysfile, configfile = arg[1], arg[2]
 
 local cfg_mod = { }
 
--- process_config either returns nil and a message, or a table that we should
--- merge into the global config. XXX Seems like this should be in
--- config.something instead of bare code.
-if configfile ~= nil then
-	local res = assert(config.process(configfile))
-
-	for k, v in pairs(res) do
-		if v ~= cfg[k] then
-			cfg[k] = v
-			cfg_mod[k] = true
-		end
-	end
-end
+config.merge_global(configfile, cfg, cfg_mod)
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}

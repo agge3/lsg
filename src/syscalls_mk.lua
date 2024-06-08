@@ -37,7 +37,7 @@ local util = require("util")
 -- the bsd_user code generator A bit tricky because a lot of the inherited code
 -- has a global config table that it referrs to deep in the call tree... need to
 -- make sure that all that code is converted to using one local to the object.
-local config ={
+local cfg = {
 }
 
 -- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
@@ -47,7 +47,7 @@ local function gen_syscalls_mk(tbl, config)
 	local s = tbl.syscalls
 
 	for k, v in pairs(s) do
-		if      v.type.STD or
+		if  v.type.STD or
 			v.type.NOSTD or
 			v.type.SYSMUX or
 			v:compat_level() >= 7
@@ -65,21 +65,11 @@ end
 
 local sysfile, configfile = arg[1], arg[2]
 
--- process_config either returns nil and a message, or a table that we should
--- merge into the global config. XXX Seems like this should be in
--- config.something instead of bare code.
-if configfile ~= nil then
-	local res = assert(config.process(configfile))
+local cfg_mod {}
 
-	for k, v in pairs(res) do
-		if v ~= config[k] then
-			config[k] = v
-			config_modified[k] = true
-		end
-	end
-end
+config.merge_global(configfile, cfg, cfg_mod)
 
 -- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
+local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
 
 gen_syscalls_mk(tbl, config)

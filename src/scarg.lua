@@ -74,16 +74,16 @@ end
 --         FALSE, argument type is void, it doesn't need to be added.
 function scarg:process()
     if self.type ~= "" and self.name ~= "void" then
-		-- config.is64bittype() needs a bare type so check it after argname
+		-- util.is64bittype() needs a bare type so check it after argname
 		-- is removed
 		self.global_abi_change = self.global_abi_change or 
                                  (config.abi_changes("pair_64bit") and 
-                                 config.is64bittype(self.type))
+                                 util.is64bittype(self.type))
 
 		self.type = self.type:gsub("intptr_t", default.abi_intptr_t)
 		self.type = self.type:gsub("semid_t", default.abi_semid_t)
 
-		if config.isptrtype(self.type) then
+		if util.isptrtype(self.type) then
 			self.type = self.type:gsub("size_t", default.abi_size_t)
 			self.type = self.type:gsub("^long", default.abi_long);
 			self.type = self.type:gsub("^u_long", default.abi_u_long);
@@ -93,7 +93,7 @@ function scarg:process()
 			self.type = default.abi_long
 		end
 
-		if config.isptrarraytype(self.type) and default.abi_ptr_array_t ~= "" then
+		if util.isptrarraytype(self.type) and default.abi_ptr_array_t ~= "" then
 			-- `* const *` -> `**`
             self.type = self.type:gsub("[*][ ]*const[ ]*[*]", "**")
 			-- e.g., `struct aiocb **` -> `uint32_t *`
@@ -117,7 +117,7 @@ function scarg:process()
 end
 
 function scarg:add()
-    if config.abi_changes("pair_64bit") and config.is64bittype(self.type) then
+    if config.abi_changes("pair_64bit") and util.is64bittype(self.type) then
         -- xxx will need to figure out how to handle this padding, since we don't
         -- see the global table
     	--if #self.funcargs % 2 == 1 then
