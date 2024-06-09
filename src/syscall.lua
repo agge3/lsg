@@ -174,7 +174,7 @@ function syscall:addargs(line)
 end
 
 function syscall:is_added(line)
-    if self.expect_rbrace == true then
+    if self.expect_rbrace then
   	    -- state wrapping up, can only get } here
 	    if not line:match("}$") then
 	    	util.abort(1, "Expected '}' found '" .. line .. "' instead.")
