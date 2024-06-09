@@ -9,6 +9,8 @@ scarg = require("scarg")
 scret = require("scret")
 util = require("util")
 
+require("test/dump")
+
 local syscall = {}
 
 syscall.__index = syscall
@@ -165,7 +167,7 @@ function syscall:addargs(line)
 	    local arg = scarg:new({ }, line)
         -- if arg processes, then add. if not, don't add
         if arg:process() then 
-            table.insert(self.args, arg:add())
+            arg:append(self.args)
         end
         return true
     end
@@ -202,6 +204,7 @@ function syscall:add(line)
     end
     -- xxx this needs attention
     if self:is_added(line) then
+        dump(self.args)
         -- do nothing
     end
     return true

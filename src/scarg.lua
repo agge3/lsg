@@ -116,38 +116,46 @@ function scarg:process()
     return false
 end
 
-function scarg:add()
-    if config.abi_changes("pair_64bit") and util.is64bittype(self.type) then
-        -- xxx will need to figure out how to handle this padding, since we don't
-        -- see the global table
-    	--if #self.funcargs % 2 == 1 then
-    	--	self.funcargs[#self.funcargs + 1] = {
-    	--		type = "int",
-    	--		name = "_pad",
-    	--	}
-    	--end
-
-
-        -- since we're creating a new table with each scarg obj, it's OK to assume
-        -- idx at 1
-    	self.argtble[1] = {
-    		type = "uint32_t",
-    		name = self.name .. "1",
-    	}
-    	self.argtbl[2] = {
-    		type = "uint32_t",
-    		name = self.name .. "2",
-    	}
-    else
-    	self.argtbl[1] = {
-    		type = self.type,
-    		name = self.name,
-    	}
+-- Pad if necessary, to keep index aligned (for pairing 64-bit arguments).
+-- @return TRUE if padded, FALSE if not
+function scarg:pad(tbl)
+    if #tbl % 2 == 1 then
+        table.insert(tbl, {
+            type = "int",
+            name = "_pad",
+        })
+        return true
     end
 
-    return self.argtbl
+    return false
 end
 
+-- Append to the syscall's argument table.
+-- @note Appends to the end. Order is the responsibility of the caller.
+-- @return TRUE if appended, FALSE if not
+function scarg:append(tbl)
+    if config.abi_changes("pair_64bit") and util.is64bittype(self.type) then
+        self:pad(tbl)
+    	table.insert(tbl, {
+    		type = "uint32_t",
+    		name = self.name .. "1",
+    	})
+    	table.insert(tbl, {
+    		type = "uint32_t",
+    		name = self.name .. "2",
+    	})
+        return true
+    else
+    	table.insert(tbl, {
+    		type = self.type,
+    		name = self.name,
+    	})
+        return true
+    end
+
+    return false
+end
+        
 function scarg:new(obj, line)
 	obj = obj or { }
 	setmetatable(obj, self)
