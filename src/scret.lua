@@ -17,46 +17,32 @@ local scret = {}
 
 scret.__index = scret
 
-function scret:init()
-    self.line = util.split(self.line, "%S+")
-    if #self.line ~= 2 then
-        util.abort(1, "Malformed line " .. line)
-    end
-end
-
 function scret:process()
-    --[[ NOTE: Old script for reference:
-    -- Don't clobber rettype set in the alt information
-	if rettype == nil then
-		rettype = "int"
-	end
-	-- Peel off the return type
-	syscallret = line:match("([^%s]+)%s")
-	line = line:match("[^%s]+%s(.+)")
 	-- Pointer incoming
-	if line:sub(1,1) == "*" then
-		syscallret = syscallret .. " "
+	if self.scret:sub(1,1) == "*" then
+		self.scret = self.scret .. " "
 	end
 	while line:sub(1,1) == "*" do
 		line = line:sub(2)
-		syscallret = syscallret .. " "
-    ]]
+		self.scret = self.scret .. " "
+    end
 end   
 
 function scret:add()
-    self.scret = self.line[1]
     return self.scret
 end
 
-function scret:new(obj, line)
+function scret:new(obj, ret)
 	obj = obj or { }
 	setmetatable(obj, self)
 	self.__index = self
 
-    self.line = line
-	self.scret = ""
+    self.scret = ret
 
-    obj:init()
+    -- Don't clobber rettype set in the alt information
+    if self.scret == nil then
+        self.scret = "int"
+    end
 
 	return obj
 end
