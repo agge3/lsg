@@ -9,8 +9,6 @@ scarg = require("scarg")
 scret = require("scret")
 util = require("util")
 
-require("test/dump")
-
 local syscall = {}
 
 syscall.__index = syscall
@@ -204,7 +202,6 @@ function syscall:add(line)
     end
     -- xxx this needs attention
     if self:is_added(line) then
-        dump(self.args)
         -- do nothing
     end
     return true
