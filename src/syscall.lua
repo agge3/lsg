@@ -165,7 +165,7 @@ function syscall:addargs(line)
 	    local arg = scarg:new({ }, line)
         -- if arg processes, then add. if not, don't add
         if arg:process() then 
-            table.insert(self.args, arg:add())
+            arg:append(self.args)
         end
         return true
     end
