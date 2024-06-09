@@ -173,6 +173,17 @@ function syscall:addargs(line)
     return false
 end
 
+function syscall:is_added(line)
+    if self.expect_rbrace == true then
+  	    -- state wrapping up, can only get } here
+	    if not line:match("}$") then
+	    	util.abort(1, "Expected '}' found '" .. line .. "' instead.")
+	    end
+        return true
+    end
+    return false
+end
+
 --
 -- We build up the system call one line at a time, as we pass through 4 states
 -- RETURN: TRUE, if syscall processing successful (and ready to add).
@@ -190,11 +201,7 @@ function syscall:add(line)
     if self:addargs(line) then
         return false -- arguments added, keep going
     end
-	-- state wrapping up, can only get } here
-	if not line:match("}$") then
-		util.abort(1, "Expected '}' found '" .. line .. "' instead.")
-	end
-	return true
+    return self:is_added(line)
 end
 
 function syscall:new(obj)
