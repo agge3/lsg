@@ -138,25 +138,26 @@ end
 function syscall:addfunc(line, words)
     if self.name == "{" then
 	    -- Expect line is "type syscall(" or "type syscall(void);"
-	    local ret = scret:new({ }, line)
+        if #words ~= 2 then
+            util.abort(1, "Malformed line " .. line)
+        end
+
+	    local ret = scret:new({ }, words[1])
         self.rettype = ret:add()
+
 	    self.name = words[2]:match("([%w_]+)%(")
-        -- checks for ");"
 	    if words[2]:match("%);$") then
             -- now we're looking for ending curly brace
 	    	self.expect_rbrace = true
 	    end
-        self.adding_args = true
         return true
     end
     return false
 end
 
 function syscall:addargs(line)
-	if self.adding_args and not self.expect_rbrace then
+	if not self.expect_rbrace then
 	    if line:match("%);$") then
-            -- don't want to expect args, exit
-            self.adding_args = false
 	    	self.expect_rbrace = true
 	    	return true
 	    end
@@ -172,17 +173,6 @@ function syscall:addargs(line)
     return false
 end
 
-function syscall:is_added(line)
-	-- state wrapping up, can only get } here
-    if self.expect_rbrace then
-	    if not line:match("}$") then
-	        util.abort(1, "Expected '}' found '" .. line .. "' instead.")
-	    end
-        return true
-    end
-    return false
-end
-
 --
 -- We build up the system call one line at a time, as we pass through 4 states
 -- RETURN: TRUE, if syscall processing successful (and ready to add).
@@ -192,19 +182,19 @@ end
 function syscall:add(line)
     local words = util.split(line, "%S+")
     if self:adddef(line, words) then
-        return false
+        return false -- definition added, keep going
     end
     if self:addfunc(line, words) then
-        return false
+        return false -- function added, keep going
     end
     if self:addargs(line) then
-        return false
+        return false -- arguments added, keep going
     end
-    -- xxx this needs attention
-    if self:is_added(line) then
-        -- do nothing
-    end
-    return true
+	-- state wrapping up, can only get } here
+	if not line:match("}$") then
+		util.abort(1, "Expected '}' found '" .. line .. "' instead.")
+	end
+	return true
 end
 
 function syscall:new(obj)
@@ -213,7 +203,6 @@ function syscall:new(obj)
 	self.__index = self
 
 	self.expect_rbrace = false
-    self.adding_args = false
 	self.args = { }
 
 	return obj
