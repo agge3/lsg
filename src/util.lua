@@ -53,6 +53,24 @@ function util.SetFromString(str, re)
 	return s
 end
 
+--  Iterator that traverses a table following the order of its keys.
+--  An optional parameter f allows the specification of an alternative order. 
+--  CREDIT: https://www.lua.org/pil/19.3.html
+--  LICENSE: MIT
+function util.pairs_by_keys(t, f)
+	local a = {}
+	for n in pairs(t) do table.insert(a, n) end
+	table.sort(a, f)
+	local i = 0      -- iterator variable
+	local iter = function ()   -- iterator function
+		i = i + 1
+		if a[i] == nil then return nil
+		else return a[i], t[a[i]]
+		end
+	end
+	return iter
+end
+
 -- Prints the generated tag.
 -- @param str
 -- The title of the file.
