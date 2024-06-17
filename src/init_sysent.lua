@@ -37,8 +37,15 @@ local util = require("util")
 -- the bsd_user code generator A bit tricky because a lot of the inherited code
 -- has a global config table that it referrs to deep in the call tree... need to
 -- make sure that all that code is converted to using one local to the object.
-local config ={
+local cfg = {
+
 }
+
+local cfg_mod = {
+
+}
+
+local fh = "/dev/null" -- xxx temporary
 
 -- Should be the same as makesyscalls.lua generates, except that we don't bother
 -- to align the system call stuff... it's badly broken anyway and looks like crap
@@ -49,14 +56,19 @@ local config ={
 -- xxx need compat call count
 
 local function gen_init_sysent(tbl, config)
-    util.generated_tag("System call switch table.")
+    local s = tbl.syscalls
+    local max = 0
+    local bio = bsdio:new({ }, fh) 
 
-	print(tbl.includes)
-	print("\n#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))")
+    bio:generated("System call switch table.")
 
-	for _, v in pairs(tbl.compat_options) do
+	bio:print(tbl.includes)
+	bio:print("\n#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))")
+
+	-- xxx compat_options doesn't exist yet
+    for _, v in pairs(tbl.compat_options) do
 		if v.count > 0 then
-			print(string.format([[
+			bio:print(string.format([[
 
 #ifdef %s
 #define %s(n, name) .sy_narg = n, .sy_call = (sy_call_t *)__CONCAT(%s, name)
@@ -67,88 +79,97 @@ local function gen_init_sysent(tbl, config)
 		end
 	end
 
-	-- xxx
-	write_line("sysent", string.format([[
+	-- xxx switchname doesn't exist yet
+	bio:print(string.format([[
 
 /* The casts are bogus but will do for now. */
 struct sysent %s[] = {
 ]], config.switchname))
 
-	print(tbl.defines)
+    bio:print(tbl.defines)
 
 	-- xxx for each syscall
+    for k, v in pairs(s) do
+	    -- xxx handle non-compat
+	    -- xxx argsize, sysflags, funcname, auditev, thr_flag
+	    bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
+                argssize)) -- xxx 
 
-	-- xxx handle non-compat
-	-- xxx argsize, sysflags, funcname, auditev, thr_flag
-	write_line("sysent",
-	    string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", argssize))
+	    -- mux flag
+        if v.type.SYSMUX then
+	    	bio:print(string.format(
+	    	    "nosys, .sy_auevent = AUE_NULL, " ..
+	    	    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
+	    	    v.cap))
 
-	if flags & known_flags.SYSMUX ~= 0 then
-		write_line("sysent", string.format(
-		    "nosys, .sy_auevent = AUE_NULL, " ..
-		    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
-		    sysflags))
-	elseif flags & known_flags.NOSTD ~= 0 then
-		write_line("sysent", string.format(
-		    "lkmressys, .sy_auevent = AUE_NULL, " ..
-		    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
-		    sysflags))
-	else
-		if funcname == "nosys" or funcname == "lkmnosys" or
-		    funcname == "sysarch" or funcname:find("^freebsd") or
-		    funcname:find("^linux") then
-			write_line("sysent", string.format(
-			    "%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
-			    funcname, auditev, sysflags, thr_flag))
-		else
-			write_line("sysent", string.format(
-			    "sys_%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
-			    funcname, auditev, sysflags, thr_flag))
-		end
-	end
+        else if v.type.NOSTD then
+	    	bio:print(string.format(
+	    	    "lkmressys, .sy_auevent = AUE_NULL, " ..
+	    	    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
+	    	    v.cap))
+	    else
+            -- xxx not sure these find call will work
+	    	if v.name == "nosys" or v.name == "lkmnosys" or
+               v.name == "sysarch" or v.name:find("^freebsd") or
+	    	   v.name:find("^linux") then
+	    	    bio:write(string.format(
+                    "%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	    		    v.name, v.audit, v.cap, v.thr))
+	    	else
+	    		bio:write(string.format(
+	    		    "sys_%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	    		    v.name, v.audit, v.cap, v.thr))
+	    	end
+	    end
 
-	write_line("sysent", string.format("/* %d = %s */\n",
-	    sysnum, funcalias))
+	    -- xxx alias
+        bio:write(string.format("/* %d = %s */\n",
+	        v.num, v.alias))
 
-	-- xxx handle obsol
-	write_line("sysent",
-	    "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
-	    ".sy_auevent = AUE_NULL, .sy_flags = 0, .sy_thrcnt = SY_THR_ABSENT },")
+	    -- xxx handle obsol
+	    bio:write(
+	        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
+	        ".sy_auevent = AUE_NULL, .sy_flags = 0, .sy_thrcnt = SY_THR_ABSENT },")
 
-	write_line("sysent", string.format("/* %d = obsolete %s */\n",
-	    sysnum, comment))
+	    -- xxx comment
+        bio:write("sysent", string.format("/* %d = obsolete %s */\n",
+	        v.num, v.comment))
 
-	-- xxx handle compat
-	if flags & known_flags.NOSTD ~= 0 then
-		write_line("sysent", string.format(
-		    "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)%s, " ..
-		    ".sy_auevent = %s, .sy_flags = 0, " ..
-		    ".sy_thrcnt = SY_THR_ABSENT },",
-		    "0", "lkmressys", "AUE_NULL"))
-	else
-		write_line("sysent", string.format(
-		    "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
-		    wrap, argssize, funcname, auditev, sysflags, thr_flag))
-	end
+	    -- xxx handle compat
+        if v.type.NOSTD then
+	    	bio:write(string.format(
+	    	    "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)%s, " ..
+	    	    ".sy_auevent = %s, .sy_flags = 0, " ..
+	    	    ".sy_thrcnt = SY_THR_ABSENT },",
+	    	    "0", "lkmressys", "AUE_NULL"))
+	    else
+            -- xxx wrap?? argsize
+	    	bio:write(string.format(
+	    	    "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	    	    wrap, argssize, v.name, v.audit, v.cap, v.thr))
+	    end
 
-	write_line("sysent", string.format("/* %d = %s %s */\n",
-	    sysnum, descr, funcalias))
+	    -- xxx descr alias
+        bio:write(string.format("/* %d = %s %s */\n",
+	        v.num, descr, v.alias))
 
-	-- xxx handle unimpl
-	if sysstart == nil and sysend == nil then
-		sysstart = tonumber(sysnum)
-		sysend = tonumber(sysnum)
-	end
+	    -- xxx handle unimpl
+        -- XXX have range available
+	    if sysstart == nil and sysend == nil then
+	    	sysstart = tonumber(sysnum)
+	    	sysend = tonumber(sysnum)
+	    end
 
-	sysnum = sysstart
-	while sysnum <= sysend do
-		write_line("sysent", string.format(
-		    "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
-		    ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
-		    ".sy_thrcnt = SY_THR_ABSENT },\t\t\t/* %d = %s */\n",
-		    sysnum, comment))
-		sysnum = sysnum + 1
-	end
+	    sysnum = sysstart
+	    while sysnum <= sysend do
+	    	bio:write(string.format(
+	    	    "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
+	    	    ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
+	    	    ".sy_thrcnt = SY_THR_ABSENT },\t\t\t/* %d = %s */\n",
+	    	    v.num, v.comment))
+	    	sysnum = sysnum + 1
+	    end
+    end
 
 	-- xxx end of foreach
 
@@ -163,19 +184,7 @@ end
 
 local sysfile, configfile = arg[1], arg[2]
 
--- process_config either returns nil and a message, or a table that we should
--- merge into the global config. XXX Seems like this should be in
--- config.something instead of bare code.
-if configfile ~= nil then
-	local res = assert(config.process(configfile))
-
-	for k, v in pairs(res) do
-		if v ~= config[k] then
-			config[k] = v
-			config_modified[k] = true
-		end
-	end
-end
+config.merge_global(fh, cfg, cfg_mod)
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}

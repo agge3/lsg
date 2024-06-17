@@ -157,7 +157,12 @@ function scarg:append(tbl)
 end
         
 function scarg:new(obj, line)
-	obj = obj or { }
+	obj = obj or { }   local ud = newproxy(true)
+    getmetatable(ud).__gc = function()
+        obj:finalizer()
+    end
+
+    obj.__gcproxy = ud
 	setmetatable(obj, self)
 	self.__index = self
     
@@ -167,13 +172,27 @@ function scarg:new(obj, line)
     self.argtbl = {}
 
 	self.local_abi_change = false
-    self.global_abi_change = false -- xxx needs to be k, v in cfg table
-    -- xxx could also leave this here and have it merge into cfg tbl as part of
-    -- destructor. Make that work in lua.
+    self.global_abi_change = false
 
     obj:init()
+        
+    -- Setup lua "destructor", to merge the global ABI change flag into the 
+    -- global config table.
+    local ud = newproxy(true)
+    getmetatable(ud).__gc = function()
+        obj:finalizer()
+    end
+    obj.__gcproxy = ud
 
 	return obj
+end
+
+-- xxx this is not going to work right now, manage the global table and then it 
+-- will 
+local function scarg:finalizer()
+    if self.global_abi_change then
+        config.changes_abi = true;
+    end
 end
 
 return scarg

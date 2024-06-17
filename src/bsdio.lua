@@ -22,6 +22,11 @@ function bsdio:write(line)
 	assert(self.fh:write(line))
 end
 
+-- xxx just to print output for now, and still use class
+function bsdio:print(line)
+    print(line)
+end
+
 function bsdio:pad64(bool)
     if bool then
 	    self:write(string.format([[
@@ -32,6 +37,10 @@ function bsdio:pad64(bool)
     end
 end
 
+function bsdio:tag()
+    return self.tag
+end
+
 -- Writes the generated tag.
 -- @param str
 -- The title of the file.
@@ -39,11 +48,10 @@ end
 -- Default comment is C comments. Optional to change comment (e.g., to sh 
 -- comments). Will still follow C-style indentation. @see style(9)
 -- @note Handles multi-line titles, deliminated by newlines.
-function bsdio:generated_tag(str, comment)
+function bsdio:generated(str, comment)
     local comment_start = comment or "/*"
     local comment_middle = comment or "*"
     local comment_end = comment or "*/"
-    local tag = "@" .. "generated"
 
     -- Don't enter loop if it's the simple case.
     if str:find("\n") == nil then
@@ -52,8 +60,8 @@ function bsdio:generated_tag(str, comment)
  %s
  %s DO NOT EDIT-- this file is automatically %s.
  %s
-]], comment_start, comment_middle, str, comment_middle, comment_middle, tag, 
-            comment_end)) 
+]], comment_start, comment_middle, str, comment_middle, comment_middle, 
+            self.tag, comment_end)) 
 
     else
         self:write(string.format([[%s]], comment_start))
@@ -66,7 +74,7 @@ function bsdio:generated_tag(str, comment)
         self:write(string.format([[ %s
  %s DO NOT EDIT-- this file is automatically %s
  %s
-]], comment_middle, comment_middle, tag, comment_end))
+]], comment_middle, comment_middle, self.tag, comment_end))
     end
 end
 
@@ -88,9 +96,10 @@ function bsdio:new(obj, fh)
     self.__index == self
 
     self.bsdio = fh
+    self.tag = "@" .. "generated" 
 
-    if self.fh == nil then
-        util.abort("Not found: " .. self.fh)
+    if self.bsdio == nil then
+        util.abort("Not found: " .. self.bsdio)
     end
 
     return obj

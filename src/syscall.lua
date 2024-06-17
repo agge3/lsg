@@ -8,6 +8,7 @@
 scarg = require("scarg")
 scret = require("scret")
 util = require("util")
+require("test/dump")
 
 local syscall = {}
 
@@ -57,6 +58,39 @@ local compat_option_sets = {
 	},
 }
 
+-- xxx these next ones have yet to find a permanent home, but need to happen --
+-- putting here for now.
+
+-- Checks against both ABI changes flag or if configuration file has specified 
+-- no ABI changes.
+local function syscall:check_abi()
+    if config.changes_abi then
+        -- argalias should be:
+    	--   COMPAT_PREFIX + ABI Prefix + funcname
+    	--argprefix = config.abi_func_prefix
+   	    --funcprefix = config.abi_func_prefix
+
+    	-- XXX need clarification on if these are the same
+        --funcalias = funcprefix .. funcname
+        --argalias
+	    --self.altname = words[5]
+	    --self.alttag = words[6]
+	    --self.altrtyp = words[7]
+
+    	--noproto = false
+    end
+end
+
+-- Set the thread flag for the syscall.
+local function syscall:check_thr(t)
+    self.thr = "SY_THR_STATIC"
+    for k, v in pairs(t) do
+        if k == "NOTSTATIC" then
+            self.thr = "SY_THR_ABSENT"
+        end
+    end
+end
+
 -- XXX need to sort out how to do compat stuff...
 -- native is the only compat thing
 -- Also need to figure out the different other things that 'filter' system calls
@@ -64,10 +98,10 @@ local compat_option_sets = {
 
 local function check_type(line, t)
 	for k, v in pairs(t) do
---		if not syscall.known_flags[v] and
---		   not v:match("^COMPAT") then
---			util.abort(1, "Bad type: " .. v)
---		end
+	    if not syscall.known_flags[k] and not
+            k:match("^COMPAT") then
+			util.abort(1, "Bad type: " .. k)
+		end
 	end
 end
 
@@ -115,15 +149,44 @@ function syscall:compat_level()
 	end
 	return native
 end
+    
+-- Also, where to put validation of no skipped syscall #? XXX
+-- Validate that there's no skipped syscall.
+function syscall:validate(prev)
+    -- xxx will need to have max range with this approach
+    if (self.num ~= prev + 1) then
+        abort(1, "Syscall number out of sync, missing syscall number " .. prev)
+    end
+
+    -- xxx rework this. maybe just peek last and confirm we're on track
+    --if sysnum:find("-") then
+    --	sysstart, sysend = sysnum:match("^([%d]+)-([%d]+)$")
+    --	if sysstart == nil or sysend == nil then
+    --		abort(1, "Malformed range: " .. sysnum)
+    --	end
+    --	sysnum = nil
+    --	sysstart = tonumber(sysstart)
+    --	sysend = tonumber(sysend)
+    --	if sysstart ~= maxsyscall + 1 then
+    --		abort(1, "syscall number out of sync, missing " ..
+    --		    maxsyscall + 1)
+    --	end
+    --else
+    --	sysnum = tonumber(sysnum)
+    --	if sysnum ~= maxsyscall + 1 then
+    --		abort(1, "syscall number out of sync, missing " ..
+    --		    maxsyscall + 1)
+    --	end
+    --end
+end
 
 function syscall:adddef(line, words)
     if self.num == nil then
-	    -- sort out range somehow XXX
-	    -- Also, where to put validation of no skipped syscall #? XXX
-        -- xxx potentially in iter()
+        -- sort out range somehow XXX
 	    self.num = words[1]
 	    self.audit = words[2]
 	    self.type = util.SetFromString(words[3], "[^|]+")
+        dump(self.type)
 	    check_type(line, self.type)
 	    self.name = words[4]
 	    -- These next three are optional, and either all present or all absent
@@ -131,6 +194,8 @@ function syscall:adddef(line, words)
 	    self.alttag = words[6]
 	    self.altrtyp = words[7]
 	    return self.name == "{"
+        -- xxx handle cap sysflag somewhere
+        -- referring to as v.cap for now
     end
     return false
 end

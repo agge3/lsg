@@ -28,9 +28,9 @@ local function gen_sysproto_h(tbl, cfg)
     local s = tbl.syscalls
     local max = 0
 
-    local localio = bsdio:new({ }, fh)
-    localio:generated_tag("System call prototypes.")
-    localio:pad64(config.abi_changes("pair_64bit"))
+    local bio = bsdio:new({ }, fh)
+    bio:generated_tag("System call prototypes.")
+    bio:pad64(config.abi_changes("pair_64bit"))
 
     for k, v in pairs(s) do
         local c = v:compat_level()
