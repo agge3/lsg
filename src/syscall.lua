@@ -82,14 +82,36 @@ local function syscall:check_abi()
 end
 
 -- Set the thread flag for the syscall.
-local function syscall:check_thr(t)
-    self.thr = "SY_THR_STATIC"
+local function syscall:process_thr(t)
+    local str = "SY_THR_STATIC"
     for k, v in pairs(t) do
         if k == "NOTSTATIC" then
-            self.thr = "SY_THR_ABSENT"
+            str = "SY_THR_ABSENT"
         end
     end
+    return str
 end
+
+local function syscall:process_cap(name, t)
+    local str = "0"
+    if config.capenabled[name] ~= nil or
+       config.capenabled[util.strip_abi_prefix[name] ~= nil then
+        str = "SYF_CAPENABLED"
+    else
+        for k, v in pairs(t) do
+            if k == "CAPENABLED" then
+                str = "SYF_CAPENABLED"
+            end
+        end
+    end
+    return str
+end
+
+    if flags & known_flags.CAPENABLED ~= 0 or
+	    config.capenabled[funcname] ~= nil or
+	    config.capenabled[stripped_name] ~= nil then
+		sysflags = "SYF_CAPENABLED"
+	end
 
 -- XXX need to sort out how to do compat stuff...
 -- native is the only compat thing
@@ -188,14 +210,14 @@ function syscall:adddef(line, words)
 	    self.type = util.SetFromString(words[3], "[^|]+")
         dump(self.type)
 	    check_type(line, self.type)
+        self.thr = process_thr(self.type)
 	    self.name = words[4]
+        self.cap = process_cap(self.name, self.type)
 	    -- These next three are optional, and either all present or all absent
 	    self.altname = words[5]
 	    self.alttag = words[6]
 	    self.altrtyp = words[7]
 	    return self.name == "{"
-        -- xxx handle cap sysflag somewhere
-        -- referring to as v.cap for now
     end
     return false
 end

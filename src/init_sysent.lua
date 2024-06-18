@@ -90,6 +90,15 @@ struct sysent %s[] = {
 
 	-- xxx for each syscall
     for k, v in pairs(s) do
+        -- xxx argssize - seems like this could be made reusable, where to put?
+        local argssize
+        if #v.args > 0 or v.type.NODEF then
+            -- xxx argalias
+            argssize = "AS( " .. argalias .. ")"
+        else
+            argssize = "0"
+        end
+
 	    -- xxx handle non-compat
 	    -- xxx argsize, sysflags, funcname, auditev, thr_flag
 	    bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
@@ -101,7 +110,6 @@ struct sysent %s[] = {
 	    	    "nosys, .sy_auevent = AUE_NULL, " ..
 	    	    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
 	    	    v.cap))
-
         else if v.type.NOSTD then
 	    	bio:print(string.format(
 	    	    "lkmressys, .sy_auevent = AUE_NULL, " ..
@@ -143,7 +151,7 @@ struct sysent %s[] = {
 	    	    ".sy_thrcnt = SY_THR_ABSENT },",
 	    	    "0", "lkmressys", "AUE_NULL"))
 	    else
-            -- xxx wrap?? argsize
+            -- xxx wrap??
 	    	bio:write(string.format(
 	    	    "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
 	    	    wrap, argssize, v.name, v.audit, v.cap, v.thr))
@@ -155,6 +163,7 @@ struct sysent %s[] = {
 
 	    -- xxx handle unimpl
         -- XXX have range available
+        -- xxx this likely will be done in freebsd-syscall
 	    if sysstart == nil and sysend == nil then
 	    	sysstart = tonumber(sysnum)
 	    	sysend = tonumber(sysnum)
@@ -187,6 +196,6 @@ local sysfile, configfile = arg[1], arg[2]
 config.merge_global(fh, cfg, cfg_mod)
 
 -- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
+local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
 
 gen_init_sysent(tbl, config)

@@ -97,3 +97,41 @@ if argalias == nil and funcname ~= nil then
 elseif argalias ~= nil then
 	argalias = argprefix .. argalias
 end
+
+-- Pointer arg?
+if argtype:find("*") then
+	desc = "userland " .. argtype
+else
+	desc = argtype;
+end
+
+local compat_set = config.compat_set
+if compat_set ~= "" then
+	if not compat_option_sets[compat_set] then
+		abort(1, "Undefined compat set: " .. compat_set)
+	end
+
+	compat_options = compat_option_sets[compat_set]
+else
+	compat_options = {}
+end
+
+-- We ignore errors here if we're relying on the default configuration.
+if not config_modified.capenabled then
+	config.capenabled = grab_capenabled(config.capabilities_conf,
+	    config_modified.capabilities_conf == nil)
+elseif config.capenabled ~= "" then
+	-- Due to limitations in the config format mostly, we'll have a comma
+	-- separated list.  Parse it into lines
+	local capenabled = {}
+	-- print("here: " .. config.capenabled)
+	for sysc in config.capenabled:gmatch("([^,]+)") do
+		capenabled[sysc] = true
+	end
+	config.capenabled = capenabled
+end
+process_compat()
+process_abi_flags()
+process_syscall_abi_change()
+process_obsol()
+process_unimpl()

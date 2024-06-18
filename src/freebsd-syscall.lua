@@ -16,6 +16,46 @@ local FreeBSDSyscall = {}
 
 FreeBSDSyscall.__index = FreeBSDSyscall
 
+-- xxx probably a better place for this
+local function FreeBSDSyscall:validate()
+end
+
+-- xxx this will likely need to go here
+function FreeBSDSyscall:process_compat()
+    -- xxx haven't reworked yet
+	--local nval = 0
+	--for _, v in pairs(known_flags) do
+	--	if v > nval then
+	--		nval = v
+	--	end
+	--end
+
+	--nval = nval << 1
+	--for _, v in pairs(compat_options) do
+	--	if v.stdcompat ~= nil then
+	--		local stdcompat = v.stdcompat
+	--		v.definition = "COMPAT_" .. stdcompat:upper()
+	--		v.compatlevel = tonumber(stdcompat:match("([0-9]+)$"))
+	--		v.flag = stdcompat:gsub("FREEBSD", "COMPAT")
+	--		v.prefix = stdcompat:lower() .. "_"
+	--		v.descr = stdcompat:lower()
+	--	end
+
+	--	local tmpname = "sys" .. v.flag:lower()
+	--	local dcltmpname = tmpname .. "dcl"
+	--	files[tmpname] = io.tmpfile()
+	--	files[dcltmpname] = io.tmpfile()
+	--	v.tmp = tmpname
+	--	v.dcltmp = dcltmpname
+
+	--	known_flags[v.flag] = nval
+	--	v.mask = nval
+	--	nval = nval << 1
+
+	--	v.count = 0
+	--end
+end
+
 function FreeBSDSyscall:parse_sysfile()
 	local file = self.sysfile
 	local config = self.config
