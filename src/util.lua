@@ -12,6 +12,7 @@
 
 local util = {}
 
+-- No char provided, trims whitespace. Char provided, trims char.
 function util.trim(s, char)
 	if s == nil then
 		return nil
@@ -22,7 +23,7 @@ function util.trim(s, char)
 	return s:gsub("^" .. char .. "+", ""):gsub(char .. "+$", "")
 end
 
--- Returns a table (list) of strings
+-- Returns a table (list) of strings.
 function util.split(s, re)
 	local t = { }
 
@@ -32,19 +33,33 @@ function util.split(s, re)
 	return t
 end
 
+-- Aborts with a message and does a clean exit procedure.
 function util.abort(status, msg)
 	assert(io.stderr:write(msg .. "\n"))
 	-- cleanup
 	os.exit(status)
 end
 
-function util.Set(t)
+--
+-- Returns a set.
+--
+-- PARAM: t, a list
+--
+-- EXAMPLE: param: {"foo", "bar"}, return: {foo = true, bar = true}
+--
+function util.set(t)
 	local s = { }
 	for _,v in pairs(t) do s[v] = true end
 	return s
 end
 
-function util.SetFromString(str, re)
+--
+-- Returns a set.
+--
+-- PARAM: str, a string
+-- PARAM: re, the pattern to construct keys from
+--
+function util.setFromString(str, re)
 	local s = { }
 
 	for v in str:gmatch(re) do
@@ -53,11 +68,14 @@ function util.SetFromString(str, re)
 	return s
 end
 
+--
 --  Iterator that traverses a table following the order of its keys.
 --  An optional parameter f allows the specification of an alternative order. 
+--
 --  CREDIT: https://www.lua.org/pil/19.3.html
 --  LICENSE: MIT
-function util.pairs_by_keys(t, f)
+--
+function util.pairsByKeys(t, f)
 	local a = {}
 	for n in pairs(t) do table.insert(a, n) end
 	table.sort(a, f)
@@ -71,14 +89,18 @@ function util.pairs_by_keys(t, f)
 	return iter
 end
 
--- Prints the generated tag.
--- @param str
--- The title of the file.
--- @param [comment]
--- Default comment is C comments. Optional to change comment (e.g., to sh 
--- comments). Will still follow C-style indentation. @see style(9)
--- @note Handles multi-line titles, deliminated by newlines.
-function util.generated_tag(str, comment)
+--
+-- Prints the generated tag. Default comment is C comments. 
+--
+-- PARAM: str, the title of the file
+--
+-- PARAM: comment, nil or optional to change comment (e.g., to sh comments).
+-- Will still follow C-style indentation.
+-- SEE: style(9)
+--
+-- NOTE: Handles multi-line titles, deliminated by newlines.
+--
+function util.generated(str, comment)
     local comment_start = comment or "/*"
     local comment_middle = comment or "*"
     local comment_end = comment or "*/"
@@ -109,27 +131,29 @@ function util.generated_tag(str, comment)
     end
 end
 
+--
 -- Checks for pointer types: '*', caddr_t, intptr_t.
--- @param type
--- The type to check.
--- @param [abi]
--- Optional ABI-specified intptr_t.
-function util.isptrtype(type, abi)
+--
+-- PARAM: type, the type to check
+-- 
+-- PARAM: abi, nil or optional ABI-specified intptr_t.
+--
+function util.isPtrType(type, abi)
     local default = "intptr_t" or abi
 	return type:find("*") or type:find("caddr_t") or type:find(default)
 end
 
-function util.isptrarraytype(type)
+function util.isPtrArrayType(type)
 	return type:find("[*][*]") or type:find("[*][ ]*const[ ]*[*]")
 end
 
 -- Find types that are always 64-bits wide.
-function util.is64bittype(type)
+function util.is64bitType(type)
 	return type:find("^dev_t[ ]*$") or type:find("^id_t[ ]*$") 
         or type:find("^off_t[ ]*$")
 end
 
-function util.strip_abi_prefix(funcname, abiprefix)
+function util.stripAbiPrefix(funcname, abiprefix)
 	local stripped_name
 	if funcname == nil then
 		return nil

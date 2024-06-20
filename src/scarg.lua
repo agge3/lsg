@@ -38,7 +38,8 @@ local default = {
     abi_flags = "",
 }
 
-local function check_abi_changes(arg)
+-- xxx we're not using flags anymore -- address
+local function checkAbiChanges(arg)
 	for k, v in pairs(config.known_abi_flags) do
 		local exprs = v.exprs
 		if config.abi_changes(k) and exprs ~= nil then
@@ -53,26 +54,39 @@ local function check_abi_changes(arg)
 	return false
 end
 
-local function strip_arg_annotations(arg)
+-- Strips the Microsoft(R) SAL annotations from the argument(s).
+local function stripArgAnnotations(arg)
 	arg = arg:gsub("_Contains_[^ ]*[_)] ?", "")
 	arg = arg:gsub("_In[^ ]*[_)] ?", "")
 	arg = arg:gsub("_Out[^ ]*[_)] ?", "")
 	return util.trim(arg)
 end
 
+-- Everytime a scarg object is created, it would go through this default 
+-- initialization procedure, to prepare to handle the current parsing line's 
+-- argument.
 function scarg:init()
     self.local_abi_change = check_abi_changes(self.scarg)
 	self.global_abi_change = self.global_abi_change or self.local_abi_change
 
-    self.scarg = strip_arg_annotations(self.scarg)
+    self.scarg = stripArgAnnotations(self.scarg)
     self.scarg = util.trim(self.scarg, ',')
     self.name = self.scarg:match("([^* ]+)$")
     self.type = util.trim(self.scarg:gsub(self.name .. "$", ""), nil) 
 end
 
--- RETURN: TRUE, argument has type and needs to be added (is now processed).
---         FALSE, argument type is void, it doesn't need to be added.
+--
+-- Processes the argument, doing things such as: flagging for a global config
+-- ABI change, converting to the default ABI, converting to the specified ABI,
+-- handling 64-bit pairing, etc.
+--
+-- RETURN: TRUE, argument has type and needs to be added (is now processed)
+--         FALSE, argument type is void, it doesn't need to be added
+--
 function scarg:process()
+    -- Much of this is identical to makesyscalls.lua
+    -- Notable changes are: using "self" for OOP, changes_abi is now 
+    -- global_abi_change, arg_abi_change is now local_abi_change
     if self.type ~= "" and self.name ~= "void" then
 		-- util.is64bittype() needs a bare type so check it after argname
 		-- is removed
@@ -116,9 +130,13 @@ function scarg:process()
     return false
 end
 
+--
 -- Pad if necessary, to keep index aligned (for pairing 64-bit arguments).
--- @return TRUE if padded, FALSE if not
+-- RETURN: TRUE if padded, FALSE if not
+--
 function scarg:pad(tbl)
+    -- This is done all in one-go in makesyscalls.lua, but it's now it's own 
+    -- procedure.
     if #tbl % 2 == 1 then
         table.insert(tbl, {
             type = "int",
@@ -130,11 +148,13 @@ function scarg:pad(tbl)
     return false
 end
 
--- Append to the syscall's argument table.
--- @note Appends to the end. Order is the responsibility of the caller.
--- @return TRUE if appended, FALSE if not
+--
+-- Append to the system call's argument table.
+-- NOTE: Appends to the end, "order" is the responsibility of the caller.
+-- RETURN: TRUE if appended, FALSE if not
+--
 function scarg:append(tbl)
-    if config.abi_changes("pair_64bit") and util.is64bittype(self.type) then
+    if config.abiChanges("pair_64bit") and util.is64bitType(self.type) then
         self:pad(tbl)
     	table.insert(tbl, {
     		type = "uint32_t",
@@ -156,28 +176,22 @@ function scarg:append(tbl)
     return false
 end
         
+-- Default constructor. scarg HAS a finalizer procedure so MAKE SURE to nil the
+-- reference.
 function scarg:new(obj, line)
-	obj = obj or { }   local ud = newproxy(true)
-    getmetatable(ud).__gc = function()
-        obj:finalizer()
-    end
-
-    obj.__gcproxy = ud
+	obj = obj or { }
 	setmetatable(obj, self)
 	self.__index = self
     
     self.scarg = line
-    self.name = ""
-    self.type = ""
-    self.argtbl = {}
-
 	self.local_abi_change = false
     self.global_abi_change = false
 
     obj:init()
         
     -- Setup lua "destructor", to merge the global ABI change flag into the 
-    -- global config table.
+    -- global config table. We've made sure to the nil the reference so this 
+    -- should be a consistent guarantee.
     local ud = newproxy(true)
     getmetatable(ud).__gc = function()
         obj:finalizer()
@@ -187,8 +201,8 @@ function scarg:new(obj, line)
 	return obj
 end
 
--- xxx this is not going to work right now, manage the global table and then it 
--- will 
+-- xxx this is not going to work right now, manage the global config table and 
+-- then it will 
 local function scarg:finalizer()
     if self.global_abi_change then
         config.changes_abi = true;

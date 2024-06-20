@@ -20,11 +20,7 @@
 -- the map this returns into the global config map since that's likely to be the
 -- same everywhere.
 
--- xxx As of now, answer is the latter. Approaching that problem and deciding
--- as project further develops. Might do some wonky things until the solution is
--- decided upon.
--- xxx Also, keeping track of config[key: changes_abi, value: true/false] is 
--- going to entail exactly that. Need to sort out how to handle that.
+-- xxx Getting closer to an answer to the above.
 
 local config = {}
 
@@ -171,42 +167,9 @@ function config.process(file)
 	return cfg
 end
 
-function config.abi_changes(name)
-    local abi_flags_mask = 0
-	if config.known_abi_flags[name] == nil then
-		util.abort(1, "abi_changes: unknown flag: " .. name)
-	end
-
-	return abi_flags_mask & config.known_abi_flags[name].value ~= 0
-end
-
-function config.get_mask(flags)
-	local mask = 0
-	for _, v in ipairs(flags) do
-		if config.known_flags[v] == nil then
-			abort(1, "Checking for unknown flag " .. v)
-		end
-
-		mask = mask | known_flags[v]
-	end
-
-	return mask
-end
-
-function config.get_mask_pat(pflags)
-	local mask = 0
-	for k, v in pairs(config.known_flags) do
-		if k:find(pflags) then
-			mask = mask | v
-		end
-	end
-
-	return mask
-end
-
 -- Either returns nil and a message, or mutates cfg and cfg_mod based on the 
 -- provided configuration file.
-function config.merge_global(fh, cfg, cfg_mod)
+function config.mergeGlobal(fh, cfg, cfg_mod)
     if fh ~= nil then
     	local res = assert(config.process(fh))
     
@@ -218,6 +181,41 @@ function config.merge_global(fh, cfg, cfg_mod)
     	end
     end
 end
+
+-- xxx this needs to be reworked, we're not doing bitmasks anymore
+function config.abiChanges(name)
+    local abi_flags_mask = 0
+	if config.known_abi_flags[name] == nil then
+		util.abort(1, "abi_changes: unknown flag: " .. name)
+	end
+
+	return abi_flags_mask & config.known_abi_flags[name].value ~= 0
+end
+
+-- xxx these won't be necessary, but keeping for now
+--function config.get_mask(flags)
+--	local mask = 0
+--	for _, v in ipairs(flags) do
+--		if config.known_flags[v] == nil then
+--			abort(1, "Checking for unknown flag " .. v)
+--		end
+--
+--		mask = mask | known_flags[v]
+--	end
+--
+--	return mask
+--end
+--
+--function config.get_mask_pat(pflags)
+--	local mask = 0
+--	for k, v in pairs(config.known_flags) do
+--		if k:find(pflags) then
+--			mask = mask | v
+--		end
+--	end
+--
+--	return mask
+--end
 
 -- xxx probably should be in class syscall
 --function config.global_abi_changes()

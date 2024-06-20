@@ -29,8 +29,11 @@ local FreeBSDSyscall = require("freebsd-syscall")
 
 local config = require("config")		-- Common config file mgt
 local util = require("util")
+local bsdio = require("bsdio")
 
 -- Globals
+
+local fh = "/dev/null" -- xxx temporary
 
 -- Default configuration; any of these may get replaced by a configuration file
 -- optionally specified. A lot of these are passed into the fbsd_sys parser and
@@ -41,12 +44,6 @@ local cfg = {
 
 }
 
-local cfg_mod = {
-
-}
-
-local fh = "/dev/null" -- xxx temporary
-
 -- Should be the same as makesyscalls.lua generates, except that we don't bother
 -- to align the system call stuff... it's badly broken anyway and looks like crap
 -- so we're declaring that a bug and removing all that crazy book-keeping to.
@@ -55,11 +52,16 @@ local fh = "/dev/null" -- xxx temporary
 
 -- xxx need compat call count
 
-local function gen_init_sysent(tbl, config)
+local function genInitSysent(tbl, config)
+    -- Grab the master syscalls table, and prepare bookkeeping for the max
+    -- syscall number.
     local s = tbl.syscalls
     local max = 0
+
+    -- Init the bsdio object, has macros and procedures for LSG specific io.
     local bio = bsdio:new({ }, fh) 
 
+    -- Write the generated tag.
     bio:generated("System call switch table.")
 
 	bio:print(tbl.includes)
@@ -187,15 +189,17 @@ end
 
 -- Entry
 
-if #arg < 1 or #arg > 2 then
+if #arg < 1 or #arg > 2 then -- xxx subject to change
 	error("usage: " .. arg[0] .. " syscall.master")
 end
 
 local sysfile, configfile = arg[1], arg[2]
 
-config.merge_global(fh, cfg, cfg_mod)
+local cfg_mod = {}
+
+config.mergeGlobal(fh, cfg, cfg_mod)
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
 
-gen_init_sysent(tbl, config)
+genInitSysent(tbl, config)

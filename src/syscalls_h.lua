@@ -29,6 +29,7 @@ local FreeBSDSyscall = require("freebsd-syscall")
 
 local config = require("config")		-- Common config file mgt
 local util = require("util")
+local bsdio = require("bsdio")
 
 -- Globals
 
@@ -44,11 +45,17 @@ local cfg = {
 -- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
 -- replaced system calls dating back to FreeBSD 7. We are lucky that the
 -- system call filename is just the base symbol name for it.
-local function gen_syscalls_mk(tbl, cfg)
-	local s = tbl.syscalls
-	local max = 0
+local function genSyscallsH(tbl, cfg)
+    -- Grab the master syscalls table, and prepare bookkeeping for the max
+    -- syscall number.
+    local s = tbl.syscalls
+    local max = 0
 
-	util.generated_tag("System call numbers.")
+    -- Init the bsdio object, has macros and procedures for LSG specific io.
+    local bio = bsdio:new({ }, fh) 
+
+    -- Write the generated tag.
+	bio.generated("System call numbers.")
 
 	for k, v in pairs(s) do
 		local c = v:compat_level()
@@ -90,9 +97,9 @@ local sysfile, configfile = arg[1], arg[2]
 
 local cfg_mod = { }
 
-config.merge_global(configfile, cfg, cfg_mod)
+config.mergeGlobal(configfile, cfg, cfg_mod)
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
 
-gen_syscalls_mk(tbl, cfg)
+genSyscallsH(tbl, cfg)
