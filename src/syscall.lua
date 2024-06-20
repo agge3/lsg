@@ -231,7 +231,7 @@ end
 -- 
 -- Adds the function declaration for the system call.
 -- NOTE: Is guarded by validation of the definition.
--- RETURN: TRUE, if the function declaration was added. FALSE, if not.
+-- RETURN: TRUE, if the function declaration was added. FALSE, if not
 --
 function syscall:addFunc(line, words)
     if self.name == "{" then
@@ -255,8 +255,8 @@ end
 
 --
 -- Adds the argument(s) for the system call.
--- NOTE: Is guarded by validation of the function declartion.
--- RETURN: TRUE, if the argument(s) were added. FALSE, if not.
+-- NOTE: Is guarded by validation of the function declaration.
+-- RETURN: TRUE, if the argument(s) were added. FALSE, if not
 --
 function syscall:addArgs(line)
 	if not self.expect_rbrace then
@@ -280,7 +280,7 @@ end
 --
 -- Confirm that the system call was added succesfully, ABORT if not.
 -- NOTE: Is guarded by validation of the argument(s).
--- RETURN: TRUE, if added succesfully. FALSE (or ABORT), if not.
+-- RETURN: TRUE, if added succesfully. FALSE (or ABORT), if not
 --
 function syscall:isAdded(line)
     if self.expect_rbrace then

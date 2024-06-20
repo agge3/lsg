@@ -18,6 +18,7 @@ local bsdio = {}
 
 bsdio.__index = bsdio
 
+-- Simple wrapper for lua IO best practice. For a simpler write call.
 function bsdio:write(line)
 	assert(self.fh:write(line))
 end
@@ -27,6 +28,11 @@ function bsdio:print(line)
     print(line)
 end
 
+--
+-- An IO macro for the PAD64 preprocessor directive. 
+-- PARAM: bool, TRUE to pad
+-- USAGE: Pass the result of ABI checks and padding will be done if necessary.
+--
 function bsdio:pad64(bool)
     if bool then
 	    self:write(string.format([[
@@ -37,17 +43,22 @@ function bsdio:pad64(bool)
     end
 end
 
+-- Returns the generated tag. Useful if only the tag is needed.
 function bsdio:tag()
     return self.tag
 end
 
--- Writes the generated tag.
--- @param str
--- The title of the file.
--- @param [comment]
--- Default comment is C comments. Optional to change comment (e.g., to sh 
--- comments). Will still follow C-style indentation. @see style(9)
--- @note Handles multi-line titles, deliminated by newlines.
+--
+-- Writes the generated tag. Default comment is C comments. 
+--
+-- PARAM: String str, the title of the file
+--
+-- PARAM: String comment, nil or optional to change comment (e.g., to sh comments).
+-- Will still follow C-style indentation.
+-- SEE: style(9)
+--
+-- NOTE: Handles multi-line titles, deliminated by newlines.
+--
 function bsdio:generated(str, comment)
     local comment_start = comment or "/*"
     local comment_middle = comment or "*"
@@ -78,6 +89,8 @@ function bsdio:generated(str, comment)
     end
 end
 
+-- xxx just a thought, we'll see if there's anything that can done in this 
+-- regard
 function bsdio:old(compat_level)
    	--elseif c >= 0 then
 	--	local s
@@ -90,6 +103,8 @@ function bsdio:old(compat_level)
 	--	end 
 end
 
+-- File is part of bsdio's identity. Different objects with different identities 
+-- (files) can be behave differently in a module.
 function bsdio:new(obj, fh)
     obj = obj or { }
     setmetatable(obj, self)
