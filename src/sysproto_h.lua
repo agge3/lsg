@@ -39,13 +39,9 @@ local cfg = {
     syscallprefix = "SYS_" -- xxx this will be needed here
 }
 
-local cfg_mod = {
-
-}
-
 -- xxx this likely does not to be a data structure, but don't have a final 
 -- decision on it
-local noncompat = util.Set {
+local noncompat = util.set {
     "STD",
     "NODEF", 
     "NOARGS", 
@@ -53,7 +49,7 @@ local noncompat = util.Set {
     "NOSTD",
 }
 
-local function gen_sysproto_h(tbl, cfg)
+local function genSysprotoH(tbl, cfg)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
@@ -99,9 +95,9 @@ local sysfile, configfile = arg[1], arg[2]
 
 local cfg_mod = { }
 
-config.merge_global(configfile, cfg, cfg_mod)
+config.mergeGlobal(configfile, cfg, cfg_mod)
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
 
-gen_sysproto_h(tbl, cfg)
+genSysprotoH(tbl, cfg)

@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
+-- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 
 -- Derived in large part from makesyscalls.lua:
@@ -17,11 +18,11 @@ local FreeBSDSyscall = {}
 FreeBSDSyscall.__index = FreeBSDSyscall
 
 -- xxx probably a better place for this
-local function FreeBSDSyscall:validate()
+local function validate()
 end
 
 -- xxx this will likely need to go here
-function FreeBSDSyscall:process_compat()
+function FreeBSDSyscall:processCompat()
     -- xxx haven't reworked yet
 	--local nval = 0
 	--for _, v in pairs(known_flags) do

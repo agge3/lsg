@@ -31,7 +31,7 @@ function scret:process()
 	if self.scret:sub(1,1) == "*" then
 		self.scret = self.scret .. " "
 	end
-	while line:sub(1,1) == "*" do
+	while self.scret:sub(1,1) == "*" do
 		line = line:sub(2)
 		self.scret = self.scret .. " "
     end
@@ -39,7 +39,7 @@ end
 
 -- Handling has been done. To add the return type to the syscall object. 
 function scret:add()
-    self.scret:process()
+    self:process()
     return self.scret
 end
 

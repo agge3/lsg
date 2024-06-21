@@ -42,7 +42,7 @@ local default = {
 local function checkAbiChanges(arg)
 	for k, v in pairs(config.known_abi_flags) do
 		local exprs = v.exprs
-		if config.abi_changes(k) and exprs ~= nil then
+		if config.abiChanges(k) and exprs ~= nil then
 			for _, e in pairs(exprs) do
 				if arg:find(e) then
 					return true
@@ -66,7 +66,7 @@ end
 -- initialization procedure, to prepare to handle the current parsing line's 
 -- argument.
 function scarg:init()
-    self.local_abi_change = check_abi_changes(self.scarg)
+    self.local_abi_change = checkAbiChanges(self.scarg)
 	self.global_abi_change = self.global_abi_change or self.local_abi_change
 
     self.scarg = stripArgAnnotations(self.scarg)
@@ -91,13 +91,13 @@ function scarg:process()
 		-- util.is64bittype() needs a bare type so check it after argname
 		-- is removed
 		self.global_abi_change = self.global_abi_change or 
-                                 (config.abi_changes("pair_64bit") and 
+                                 (config.abiChanges("pair_64bit") and 
                                  util.is64bittype(self.type))
 
 		self.type = self.type:gsub("intptr_t", default.abi_intptr_t)
 		self.type = self.type:gsub("semid_t", default.abi_semid_t)
 
-		if util.isptrtype(self.type) then
+		if util.isPtrType(self.type) then
 			self.type = self.type:gsub("size_t", default.abi_size_t)
 			self.type = self.type:gsub("^long", default.abi_long);
 			self.type = self.type:gsub("^u_long", default.abi_u_long);
@@ -107,7 +107,7 @@ function scarg:process()
 			self.type = default.abi_long
 		end
 
-		if util.isptrarraytype(self.type) and default.abi_ptr_array_t ~= "" then
+		if util.isPtrArrayType(self.type) and default.abi_ptr_array_t ~= "" then
 			-- `* const *` -> `**`
             self.type = self.type:gsub("[*][ ]*const[ ]*[*]", "**")
 			-- e.g., `struct aiocb **` -> `uint32_t *`
@@ -192,18 +192,19 @@ function scarg:new(obj, line)
     -- Setup lua "destructor", to merge the global ABI change flag into the 
     -- global config table. We've made sure to the nil the reference so this 
     -- should be a consistent guarantee.
-    local ud = newproxy(true)
-    getmetatable(ud).__gc = function()
-        obj:finalizer()
-    end
-    obj.__gcproxy = ud
+    local proxy = setmetatable({ }, {
+        __gc = function()
+            obj:finalizer()
+        end
+    })
+    obj.__gcproxy = proxy
 
 	return obj
 end
 
 -- xxx this is not going to work right now, manage the global config table and 
 -- then it will 
-local function scarg:finalizer()
+function scarg:finalizer()
     if self.global_abi_change then
         config.changes_abi = true;
     end

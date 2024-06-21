@@ -13,7 +13,7 @@ local syscall = {}
 
 syscall.__index = syscall
 
-syscall.known_flags = util.Set {
+syscall.known_flags = util.set {
 	"STD",
 	"OBSOL",
 	"RESERVED",
@@ -59,7 +59,7 @@ local compat_option_sets = {
 
 -- Checks against both ABI changes flag or if configuration file has specified 
 -- no ABI changes.
-local function syscall:checkAbi()
+local function checkAbi()
     -- xxx this needs to be reworked
     if config.changes_abi then
         -- argalias should be:
@@ -82,7 +82,7 @@ end
 -- Processes the thread flag for the system call.
 -- RETURN: String thr, the appropriate thread flag
 --
-local function syscall:processThr(t)
+local function processThr(t)
     local str = "SY_THR_STATIC"
     for k, v in pairs(t) do
         if k == "NOTSTATIC" then
@@ -96,19 +96,20 @@ end
 -- Processes the capability flag for the system call.
 -- RETURN: String cap, "SYF_CAPENABLED" for capability enabled, "0" if not
 --
-local function syscall:processCap(name, t)
-    local str = "0"
-    if config.capenabled[name] ~= nil or
-       config.capenabled[util.strip_abi_prefix[name] ~= nil then
-        str = "SYF_CAPENABLED"
-    else
-        for k, v in pairs(t) do
-            if k == "CAPENABLED" then
-                str = "SYF_CAPENABLED"
-            end
-        end
-    end
-    return str
+local function processCap(name, t)
+    -- xxx broken right now, but will be sorted out after handling the cap stuff
+    --local str = "0"
+    --if config.capenabled[name] ~= nil or
+    --   config.capenabled[util.stripAbiPrefix(name)] ~= nil then
+    --    str = "SYF_CAPENABLED"
+    --else
+    --    for k, v in pairs(t) do
+    --        if k == "CAPENABLED" then
+    --            str = "SYF_CAPENABLED"
+    --        end
+    --    end
+    --end
+    --return str
 end
 
 -- XXX need to sort out how to do compat stuff...
@@ -214,11 +215,11 @@ function syscall:addDef(line, words)
         -- sort out range somehow XXX
 	    self.num = words[1]
 	    self.audit = words[2]
-	    self.type = util.SetFromString(words[3], "[^|]+")
-	    check_type(line, self.type)
-        self.thr = process_thr(self.type)
+	    self.type = util.setFromString(words[3], "[^|]+")
+	    checkType(line, self.type)
+        self.thr = processThr(self.type)
 	    self.name = words[4]
-        self.cap = process_cap(self.name, self.type)
+        self.cap = processCap(self.name, self.type)
 	    -- These next three are optional, and either all present or all absent
 	    self.altname = words[5]
 	    self.alttag = words[6]
@@ -306,7 +307,7 @@ end
 --
 function syscall:add(line)
     local words = util.split(line, "%S+")
-    if self:adDef(line, words) then
+    if self:addDef(line, words) then
         return false -- definition added, keep going
     end
     if self:addFunc(line, words) then
