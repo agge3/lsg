@@ -38,7 +38,7 @@ local function gen_syscalls_h(tbl, config)
 	local m = 0
 
 	for k, v in pairs(s) do
-		if      v.type["STD"] ~= nil or
+		if  v.type["STD"] ~= nil or
 			v.type["NOSTD"] ~= nil
 		then
 			print(string.format("#define SYS_%s %d", v.name, v.num))

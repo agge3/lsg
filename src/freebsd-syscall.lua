@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
+-- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 
 -- Derived in large part from makesyscalls.lua:
@@ -15,6 +16,46 @@ local syscall = require("syscall")
 local FreeBSDSyscall = {}
 
 FreeBSDSyscall.__index = FreeBSDSyscall
+
+-- xxx probably a better place for this
+local function validate()
+end
+
+-- xxx this will likely need to go here
+function FreeBSDSyscall:processCompat()
+    -- xxx haven't reworked yet
+	--local nval = 0
+	--for _, v in pairs(known_flags) do
+	--	if v > nval then
+	--		nval = v
+	--	end
+	--end
+
+	--nval = nval << 1
+	--for _, v in pairs(compat_options) do
+	--	if v.stdcompat ~= nil then
+	--		local stdcompat = v.stdcompat
+	--		v.definition = "COMPAT_" .. stdcompat:upper()
+	--		v.compatlevel = tonumber(stdcompat:match("([0-9]+)$"))
+	--		v.flag = stdcompat:gsub("FREEBSD", "COMPAT")
+	--		v.prefix = stdcompat:lower() .. "_"
+	--		v.descr = stdcompat:lower()
+	--	end
+
+	--	local tmpname = "sys" .. v.flag:lower()
+	--	local dcltmpname = tmpname .. "dcl"
+	--	files[tmpname] = io.tmpfile()
+	--	files[dcltmpname] = io.tmpfile()
+	--	v.tmp = tmpname
+	--	v.dcltmp = dcltmpname
+
+	--	known_flags[v.flag] = nval
+	--	v.mask = nval
+	--	nval = nval << 1
+
+	--	v.count = 0
+	--end
+end
 
 function FreeBSDSyscall:parse_sysfile()
 	local file = self.sysfile

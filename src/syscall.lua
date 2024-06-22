@@ -13,7 +13,7 @@ local syscall = {}
 
 syscall.__index = syscall
 
-syscall.known_flags = util.Set {
+syscall.known_flags = util.set {
 	"STD",
 	"OBSOL",
 	"RESERVED",
@@ -57,23 +57,79 @@ local compat_option_sets = {
 	},
 }
 
+-- Checks against both ABI changes flag or if configuration file has specified 
+-- no ABI changes.
+local function checkAbi()
+    -- xxx this needs to be reworked
+    if config.changes_abi then
+        -- argalias should be:
+    	--   COMPAT_PREFIX + ABI Prefix + funcname
+    	--argprefix = config.abi_func_prefix
+   	    --funcprefix = config.abi_func_prefix
+
+    	-- XXX need clarification on if these are the same
+        --funcalias = funcprefix .. funcname
+        --argalias
+	    --self.altname = words[5]
+	    --self.alttag = words[6]
+	    --self.altrtyp = words[7]
+
+    	--noproto = false
+    end
+end
+
+--
+-- Processes the thread flag for the system call.
+-- RETURN: String thr, the appropriate thread flag
+--
+local function processThr(t)
+    local str = "SY_THR_STATIC"
+    for k, v in pairs(t) do
+        if k == "NOTSTATIC" then
+            str = "SY_THR_ABSENT"
+        end
+    end
+    return str
+end
+
+--
+-- Processes the capability flag for the system call.
+-- RETURN: String cap, "SYF_CAPENABLED" for capability enabled, "0" if not
+--
+local function processCap(name, t)
+    -- xxx broken right now, but will be sorted out after handling the cap stuff
+    --local str = "0"
+    --if config.capenabled[name] ~= nil or
+    --   config.capenabled[util.stripAbiPrefix(name)] ~= nil then
+    --    str = "SYF_CAPENABLED"
+    --else
+    --    for k, v in pairs(t) do
+    --        if k == "CAPENABLED" then
+    --            str = "SYF_CAPENABLED"
+    --        end
+    --    end
+    --end
+    --return str
+end
+
 -- XXX need to sort out how to do compat stuff...
 -- native is the only compat thing
 -- Also need to figure out the different other things that 'filter' system calls
 -- since the abi32 stuff does that.
 
-local function check_type(line, t)
+-- Validates a system call's type, aborts if unknown.
+local function checkType(line, t)
 	for k, v in pairs(t) do
---		if not syscall.known_flags[v] and
---		   not v:match("^COMPAT") then
---			util.abort(1, "Bad type: " .. v)
---		end
+	    if not syscall.known_flags[k] and not
+            k:match("^COMPAT") then
+			util.abort(1, "Bad type: " .. k)
+		end
 	end
 end
 
 local native = 1000000
 
--- Return the symbol name for this system call
+-- Return the symbol name for this system call.
 function syscall:symbol()
 	local c = self:compat_level()
 	if self.type.OBSOL then
@@ -94,11 +150,13 @@ function syscall:symbol()
 	return self.name
 end
 
--- Return the compatibility level for this system call
+--
+-- Return the compatibility level for this system call.
 -- 0 is obsolete
 -- < 0 is this isn't really a system call we care about
 -- 3 is 4.3BSD in theory, but anything before FreeBSD 4
 -- >= 4 FreeBSD version this system call was replaced with a new version
+--
 function syscall:compat_level()
 	if self.type.UNIMPL or self.type.RESERVED or self.type.NODEF then
 		return -1
@@ -115,17 +173,53 @@ function syscall:compat_level()
 	end
 	return native
 end
+    
+-- Also, where to put validation of no skipped syscall #? XXX
 
-function syscall:adddef(line, words)
+-- Validate that there's no skipped system call.
+function syscall:validate(prev)
+    -- xxx will need to have max range with this approach
+    if (self.num ~= prev + 1) then
+        abort(1, "Syscall number out of sync, missing syscall number " .. prev)
+    end
+
+    -- xxx rework this. maybe just peek last and confirm we're on track
+    --if sysnum:find("-") then
+    --	sysstart, sysend = sysnum:match("^([%d]+)-([%d]+)$")
+    --	if sysstart == nil or sysend == nil then
+    --		abort(1, "Malformed range: " .. sysnum)
+    --	end
+    --	sysnum = nil
+    --	sysstart = tonumber(sysstart)
+    --	sysend = tonumber(sysend)
+    --	if sysstart ~= maxsyscall + 1 then
+    --		abort(1, "syscall number out of sync, missing " ..
+    --		    maxsyscall + 1)
+    --	end
+    --else
+    --	sysnum = tonumber(sysnum)
+    --	if sysnum ~= maxsyscall + 1 then
+    --		abort(1, "syscall number out of sync, missing " ..
+    --		    maxsyscall + 1)
+    --	end
+    --end
+end
+
+--
+-- Adds the definition for the system call.
+-- NOTE: Is guarded by the system call number ~= nil
+-- RETURN: TRUE, if the definition was added. FALSE, if not
+--
+function syscall:addDef(line, words)
     if self.num == nil then
-	    -- sort out range somehow XXX
-	    -- Also, where to put validation of no skipped syscall #? XXX
-        -- xxx potentially in iter()
+        -- sort out range somehow XXX
 	    self.num = words[1]
 	    self.audit = words[2]
-	    self.type = util.SetFromString(words[3], "[^|]+")
-	    check_type(line, self.type)
+	    self.type = util.setFromString(words[3], "[^|]+")
+	    checkType(line, self.type)
+        self.thr = processThr(self.type)
 	    self.name = words[4]
+        self.cap = processCap(self.name, self.type)
 	    -- These next three are optional, and either all present or all absent
 	    self.altname = words[5]
 	    self.alttag = words[6]
@@ -135,7 +229,12 @@ function syscall:adddef(line, words)
     return false
 end
 
-function syscall:addfunc(line, words)
+-- 
+-- Adds the function declaration for the system call.
+-- NOTE: Is guarded by validation of the definition.
+-- RETURN: TRUE, if the function declaration was added. FALSE, if not
+--
+function syscall:addFunc(line, words)
     if self.name == "{" then
 	    -- Expect line is "type syscall(" or "type syscall(void);"
         if #words ~= 2 then
@@ -155,7 +254,12 @@ function syscall:addfunc(line, words)
     return false
 end
 
-function syscall:addargs(line)
+--
+-- Adds the argument(s) for the system call.
+-- NOTE: Is guarded by validation of the function declaration.
+-- RETURN: TRUE, if the argument(s) were added. FALSE, if not
+--
+function syscall:addArgs(line)
 	if not self.expect_rbrace then
 	    if line:match("%);$") then
 	    	self.expect_rbrace = true
@@ -168,12 +272,18 @@ function syscall:addargs(line)
         if arg:process() then 
             arg:append(self.args)
         end
+        arg = nil -- nil the reference to trigger the finalizer
         return true
     end
     return false
 end
 
-function syscall:is_added(line)
+--
+-- Confirm that the system call was added succesfully, ABORT if not.
+-- NOTE: Is guarded by validation of the argument(s).
+-- RETURN: TRUE, if added succesfully. FALSE (or ABORT), if not
+--
+function syscall:isAdded(line)
     if self.expect_rbrace then
   	    -- state wrapping up, can only get } here
 	    if not line:match("}$") then
@@ -185,23 +295,28 @@ function syscall:is_added(line)
 end
 
 --
--- We build up the system call one line at a time, as we pass through 4 states
--- RETURN: TRUE, if syscall processing successful (and ready to add).
+-- Interface to add a system call. To be added to the master system call object,
+-- FreeBSDSyscall.
+--
+-- NOTE: The system call is built up one line at a time, validating through four 
+-- states, before confirmed to be added.
+--
+-- RETURN: TRUE, if system call processing is successful (and ready to add)
 --         FALSE, if still processing
 --         ABORT, with error
 --
 function syscall:add(line)
     local words = util.split(line, "%S+")
-    if self:adddef(line, words) then
+    if self:addDef(line, words) then
         return false -- definition added, keep going
     end
-    if self:addfunc(line, words) then
+    if self:addFunc(line, words) then
         return false -- function added, keep going
     end
-    if self:addargs(line) then
+    if self:addArgs(line) then
         return false -- arguments added, keep going
     end
-    return self:is_added(line)
+    return self:isAdded(line) -- final validation, before adding
 end
 
 function syscall:new(obj)
@@ -215,9 +330,11 @@ function syscall:new(obj)
 	return obj
 end
 
+--
 -- Make a copy (a shallow one is fine) of `self` and replace
 -- the system call number (which is likely a range) with num
 -- (which should be a number)
+--
 function syscall:clone(num)
 	local obj = syscall:new(obj)
 
@@ -229,11 +346,13 @@ function syscall:clone(num)
 	return obj
 end
 
+--
 -- As we're parsing the system calls, there's two types. Either we have a
 -- specific one, that's a assigned a number, or we have a range for things like
 -- reseved system calls. this function deals with both knowing that the specific
 -- ones are more copy and so we should just return the object we just made w/o
 -- an extra clone.
+--
 function syscall:iter()
 	local s = tonumber(self.num)
 	local e
