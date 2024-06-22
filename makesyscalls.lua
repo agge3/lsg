@@ -1362,7 +1362,7 @@ process_syscall_def = function(line)
 		handle_compat(sysnum, thr_flag, flags, sysflags, rettype,
 		    auditev, funcname, funcalias, funcargs, argalias)
 	elseif flags & ncompatflags ~= 0 then
-		handle_noncompat(sysnum, thr_flag, flags, sysflags, rettype,syscall
+		handle_noncompat(sysnum, thr_flag, flags, sysflags, rettype,
 		    auditev, syscallret, funcname, funcalias, funcargs,
 		    argalias)
 	else
