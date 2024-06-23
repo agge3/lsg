@@ -33,7 +33,8 @@ local bsdio = require("bsdio")
 
 -- Globals
 
-local fh = "/dev/null" -- xxx temporary
+local sysproto = "" .. ".h"
+local sysproto_h = "" .. "_SYSPROTO_H_"
 
 local cfg = {
     syscallprefix = "SYS_" -- xxx this will be needed here

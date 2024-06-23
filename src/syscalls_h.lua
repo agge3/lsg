@@ -33,6 +33,8 @@ local bsdio = require("bsdio")
 
 -- Globals
 
+local syshdr = "" .. ".h"
+
 -- Default configuration; any of these may get replaced by a configuration file
 -- optionally specified. A lot of these are passed into the fbsd_sys parser and
 -- the bsd_user code generator A bit tricky because a lot of the inherited code

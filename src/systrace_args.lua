@@ -33,6 +33,8 @@ local bsdio = require("bsdio")
 
 -- Globals
 
+local systrace = "" .. "_systrace_args.c"
+
 local fh = "/dev/null" -- xxx temporary
 
 local cfg = {

@@ -127,6 +127,20 @@ local function checkType(line, t)
 	end
 end
 
+-- If there are ABI changes from native, process the system call to match the
+-- expected ABI.
+local function processAbiChanges()
+    if config["changes_abi"] then
+        -- argalias should be:
+        --   COMPAT_PREFIX + ABI Prefix + funcname
+    	self.argprefix = config["abi_func_prefix"] -- xxx issue here
+    	self.prefix = config["abi_func_prefix"]
+    	self.alias = self.prefix .. self.name
+    	return false -- xxx noproto = false,  trace better
+    end
+    return true
+end
+
 local native = 1000000
 
 -- Return the symbol name for this system call.
