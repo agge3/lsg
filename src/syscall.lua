@@ -68,7 +68,7 @@ local function processThr(type)
             str = "SY_THR_ABSENT"
         end
     end
-    return true
+    return str
 end
 
 --
