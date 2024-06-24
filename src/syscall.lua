@@ -61,27 +61,28 @@ local compat_option_sets = {
 -- Processes the thread flag for the system call.
 -- RETURN: String thr, the appropriate thread flag
 --
-local function processThr(t)
+local function processThr(type)
     local str = "SY_THR_STATIC"
-    for k, v in pairs(t) do
+    for k, v in pairs(type) do
         if k == "NOTSTATIC" then
             str = "SY_THR_ABSENT"
         end
     end
-    return str
+    return true
 end
 
 --
 -- Processes the capability flag for the system call.
 -- RETURN: String cap, "SYF_CAPENABLED" for capability enabled, "0" if not
 --
-local function processCap(name, t)
+local function processCap(name, prefix, type)
     local str = "0"
+    local stripped = util.stripAbiPrefix(name, prefix)
     if config.capenabled[name] ~= nil or
-       config.capenabled[util.stripAbiPrefix(name)] ~= nil then
+       config.capenabled[stripped] ~= nil then
         str = "SYF_CAPENABLED"
     else
-        for k, v in pairs(t) do
+        for k, v in pairs(type) do
             if k == "CAPENABLED" then
                 str = "SYF_CAPENABLED"
             end
@@ -96,8 +97,8 @@ end
 -- since the abi32 stuff does that.
 
 -- Validates a system call's type, aborts if unknown.
-local function checkType(line, t)
-	for k, v in pairs(t) do
+local function checkType(line, type)
+	for k, v in pairs(type) do
 	    if not syscall.known_flags[k] and not
             k:match("^COMPAT") then
 			util.abort(1, "Bad type: " .. k)
@@ -107,8 +108,8 @@ end
 
 -- If there are ABI changes from native, process the system call to match the
 -- expected ABI.
-local function processAbiChanges()
-    if config.changes_abi then
+function syscall:processAbiChanges()
+    if config.changes_abi and self.name ~= nil then
         -- argalias should be:
         --   COMPAT_PREFIX + ABI Prefix + funcname
     	self.argprefix = config.abi_func_prefix -- xxx issue here
@@ -178,9 +179,13 @@ function syscall:addDef(line, words)
 	    self.audit = words[2]
 	    self.type = util.setFromString(words[3], "[^|]+")
 	    checkType(line, self.type)
+        -- thread flag, based on type(s) provided
         self.thr = processThr(self.type)
 	    self.name = words[4]
-        self.cap = processCap(self.name, self.type)
+        -- process changes from native, if there are any
+        self:processAbiChanges()        
+        -- capability flag, if it was provided
+        self.cap = processCap(self.name, self.prefix, self.type)
 	    -- These next three are optional, and either all present or all absent
 	    self.altname = words[5]
 	    self.alttag = words[6]

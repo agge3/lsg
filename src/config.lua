@@ -32,7 +32,7 @@ config = {
     syscallprefix = "SYS_",
     switchname = "sysent",          -- xxx 
     namesname = "syscallnames",     -- xxx
-    abi_flags = "",
+    abi_flags = {},
     abi_func_prefix = "",
     abi_type_suffix = "",
     abi_long = "long",
@@ -43,14 +43,15 @@ config = {
     abi_headers = "",
     abi_intptr_t = "intptr_t",
     ptr_intptr_t_cast = "intptr_t",
-    syscall_abi_change = "",        -- System calls that require ABI-specific handling
-    syscall_no_abi_change = "",     -- System calls that appear to require handling, but don't
+    syscall_abi_change = {},        -- System calls that require ABI-specific handling
+    syscall_no_abi_change = {},     -- System calls that appear to require handling, but don't
     -- xxx why don't we just set these tables below when we merge?
     obsol = {},     -- OBSOL system calls
     unimpl = {},    -- System calls without implementations
     capabilities_conf = "capabilities.conf",
     compat_set = "native",
     mincompat = 0,
+    capenabled = {},
 }
 
 -- Keep track of modifications if there are.
@@ -65,7 +66,7 @@ config.changes_abi = false or not config.no_changes_abi
 -- expr, which are contained in an array associated with each key; expr gets 
 -- applied to each argument type to indicate whether this argument is subject to 
 -- ABI change given the configured flags.
-config.abi_known_flags = {
+config.known_abi_flags = {
 	long_size = {
 		"_Contains[a-z_]*_long_",
 		"^long [a-z0-9_]+$",
@@ -176,14 +177,14 @@ function config.merge(fh)
                 -- xxx haven't tested implementation, but you get the idea
                 if v:find("abi_flags") then
                     -- match for pipe, that's how abi_flags is formatted
-                    config[k][] = util.setFromString(v), "[^|]+")
-                else if v:find("capenabled") or
+                    table.insert(config[k], util.setFromString(v, "[^|]+"))
+                elseif v:find("capenabled") or
                         v:find("syscall_abi_change") or
                         v:find("syscall_no_abi_change") or
                         v:find("obsol") or
                         v:find("unimpl") then
                     -- match for space, that's how these are formatted
-                    config[k][] = util.setFromString(v), "[^ ]+")
+                    table.insert(config[k], util.setFromString(v, "[^ ]+"))
                 else
     			    config[k] = v
                 end
@@ -199,7 +200,7 @@ function config.abiChanges(name)
 	if config.known_abi_flags[name] == nil then
 		util.abort(1, "abi_changes: unknown flag: " .. name)
 	end
-    return config["abi_flags"][name] ~= nil
+    return config.abi_flags[name] ~= nil
 end
 
 -- xxx for myself, haven't found the relevancy yet

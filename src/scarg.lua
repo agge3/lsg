@@ -24,7 +24,7 @@ scarg.__index = scarg
 -- there are.
 local function checkAbiChanges(arg)
 	for k, v in pairs(config.known_abi_flags) do
-		if config.abiChanges(k) and v ~= nil then
+		if config.abiChanges(k) ~= nil then
 			for _, e in pairs(v) do
 				if arg:find(e) then
 					return true
@@ -80,7 +80,7 @@ function scarg:process()
 			self.type = self.type:gsub("^long", config.abi_long)
 			self.type = self.type:gsub("^u_long", config.abi_u_long)
 			self.type = self.type:gsub("^const u_long", "const " 
-                    .. config.abi_u_long
+                    .. config.abi_u_long)
 		elseif self.type:find("^long$") then
 			self.type = config.abi_long
 		end
