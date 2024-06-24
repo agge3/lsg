@@ -57,27 +57,6 @@ local compat_option_sets = {
 	},
 }
 
--- Checks against both ABI changes flag or if configuration file has specified 
--- no ABI changes.
-local function checkAbi()
-    -- xxx this needs to be reworked
-    if config.changes_abi then
-        -- argalias should be:
-    	--   COMPAT_PREFIX + ABI Prefix + funcname
-    	--argprefix = config.abi_func_prefix
-   	    --funcprefix = config.abi_func_prefix
-
-    	-- XXX need clarification on if these are the same
-        --funcalias = funcprefix .. funcname
-        --argalias
-	    --self.altname = words[5]
-	    --self.alttag = words[6]
-	    --self.altrtyp = words[7]
-
-    	--noproto = false
-    end
-end
-
 --
 -- Processes the thread flag for the system call.
 -- RETURN: String thr, the appropriate thread flag
@@ -97,19 +76,18 @@ end
 -- RETURN: String cap, "SYF_CAPENABLED" for capability enabled, "0" if not
 --
 local function processCap(name, t)
-    -- xxx broken right now, but will be sorted out after handling the cap stuff
-    --local str = "0"
-    --if config.capenabled[name] ~= nil or
-    --   config.capenabled[util.stripAbiPrefix(name)] ~= nil then
-    --    str = "SYF_CAPENABLED"
-    --else
-    --    for k, v in pairs(t) do
-    --        if k == "CAPENABLED" then
-    --            str = "SYF_CAPENABLED"
-    --        end
-    --    end
-    --end
-    --return str
+    local str = "0"
+    if config.capenabled[name] ~= nil or
+       config.capenabled[util.stripAbiPrefix(name)] ~= nil then
+        str = "SYF_CAPENABLED"
+    else
+        for k, v in pairs(t) do
+            if k == "CAPENABLED" then
+                str = "SYF_CAPENABLED"
+            end
+        end
+    end
+    return str
 end
 
 -- XXX need to sort out how to do compat stuff...
@@ -130,11 +108,11 @@ end
 -- If there are ABI changes from native, process the system call to match the
 -- expected ABI.
 local function processAbiChanges()
-    if config["changes_abi"] then
+    if config.changes_abi then
         -- argalias should be:
         --   COMPAT_PREFIX + ABI Prefix + funcname
-    	self.argprefix = config["abi_func_prefix"] -- xxx issue here
-    	self.prefix = config["abi_func_prefix"]
+    	self.argprefix = config.abi_func_prefix -- xxx issue here
+    	self.prefix = config.abi_func_prefix
     	self.alias = self.prefix .. self.name
     	return false -- xxx noproto = false,  trace better
     end
@@ -188,37 +166,6 @@ function syscall:compat_level()
 	return native
 end
     
--- Also, where to put validation of no skipped syscall #? XXX
-
--- Validate that there's no skipped system call.
-function syscall:validate(prev)
-    -- xxx will need to have max range with this approach
-    if (self.num ~= prev + 1) then
-        abort(1, "Syscall number out of sync, missing syscall number " .. prev)
-    end
-
-    -- xxx rework this. maybe just peek last and confirm we're on track
-    --if sysnum:find("-") then
-    --	sysstart, sysend = sysnum:match("^([%d]+)-([%d]+)$")
-    --	if sysstart == nil or sysend == nil then
-    --		abort(1, "Malformed range: " .. sysnum)
-    --	end
-    --	sysnum = nil
-    --	sysstart = tonumber(sysstart)
-    --	sysend = tonumber(sysend)
-    --	if sysstart ~= maxsyscall + 1 then
-    --		abort(1, "syscall number out of sync, missing " ..
-    --		    maxsyscall + 1)
-    --	end
-    --else
-    --	sysnum = tonumber(sysnum)
-    --	if sysnum ~= maxsyscall + 1 then
-    --		abort(1, "syscall number out of sync, missing " ..
-    --		    maxsyscall + 1)
-    --	end
-    --end
-end
-
 --
 -- Adds the definition for the system call.
 -- NOTE: Is guarded by the system call number ~= nil

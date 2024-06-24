@@ -20,22 +20,6 @@ local scarg = {}
 
 scarg.__index = scarg
 
--- xxx going to put this here for now, to get things working. going to
--- transition to proper config merging.
-
--- Default configuration; any of these may get replaced by a configuration file
--- optionally specified.
-local default = {
-	abi_intptr_t = "intptr_t",
-	abi_size_t = "size_t",
-	abi_u_long = "u_long",
-	abi_long = "long",
-	abi_semid_t = "semid_t",
-	abi_ptr_array_t = "",
-	ptr_intptr_t_cast = "intptr_t",
-    -- NOTE: putting these here temporarily, in case they're needed
-}
-
 -- Check argument against config for ABI changes from native. Return TRUE if
 -- there are.
 local function checkAbiChanges(arg)
@@ -80,41 +64,41 @@ end
 --
 function scarg:process()
     -- Much of this is identical to makesyscalls.lua
-    -- Notable changes are: using "self" for OOP, changes_abi is now 
-    -- global_abi_change, arg_abi_change is now local_abi_change
+    -- Notable changes are: using "self" for OOP, arg_abi_change is now (local)
+    -- abi_changes, and abi_changes is now global_abi_changes
     if self.type ~= "" and self.name ~= "void" then
 		-- util.is64bitType() needs a bare type so check it after argname
 		-- is removed
-		self.global_abi_change = config.abiChanges("pair_64bit") and 
+		self.global_abi_changes = config.abiChanges("pair_64bit") and 
                                  util.is64bitType(self.type)
 
-		self.type = self.type:gsub("intptr_t", config["abi_intptr_t"])
-		self.type = self.type:gsub("semid_t", config["abi_semid_t"])
+		self.type = self.type:gsub("intptr_t", config.abi_intptr_t)
+		self.type = self.type:gsub("semid_t", config.abi_semid_t)
 
 		if util.isPtrType(self.type) then
-			self.type = self.type:gsub("size_t", config["abi_size_t"])
-			self.type = self.type:gsub("^long", config["abi_long"]);
-			self.type = self.type:gsub("^u_long", config["abi_u_long"]);
+			self.type = self.type:gsub("size_t", config.abi_size_t)
+			self.type = self.type:gsub("^long", config.abi_long)
+			self.type = self.type:gsub("^u_long", config.abi_u_long)
 			self.type = self.type:gsub("^const u_long", "const " 
-                    .. config["abi_u_long"])
+                    .. config.abi_u_long
 		elseif self.type:find("^long$") then
-			self.type = config["abi_long"]
+			self.type = config.abi_long
 		end
 
-		if util.isPtrArrayType(self.type) and config["abi_ptr_array_t"] ~= "" then
+		if util.isPtrArrayType(self.type) and config.abi_ptr_array_t ~= "" then
 			-- `* const *` -> `**`
             self.type = self.type:gsub("[*][ ]*const[ ]*[*]", "**")
 			-- e.g., `struct aiocb **` -> `uint32_t *`
-			self.type = self.type:gsub("[^*]*[*]", config["abi_ptr_array_t"] .. " ", 1)
+			self.type = self.type:gsub("[^*]*[*]", config.abi_ptr_array_t .. " ", 1)
 		end
 
 		-- XX TODO: Forward declarations? See: sysstubfwd in CheriBSD
 		if self.abi_changes then
-			local abi_type_suffix = config["abi_type_suffix"]
+			local abi_type_suffix = config.abi_type_suffix
 			self.type = self.type:gsub("(struct [^ ]*)", "%1" ..
-			    config["abi_type_suffix"])
+			    config.abi_type_suffix)
 			self.type = self.type:gsub("(union [^ ]*)", "%1" ..
-			    config["abi_type_suffix"])
+			    config.abi_type_suffix)
 		end
 
         return true
@@ -197,8 +181,9 @@ function scarg:new(obj, line)
 end
 
 function scarg:finalizer()
-    if self.global_abi_changes then
-        config.merge()
+    if self.global_changes_abi then
+         -- xxx this is what we're intending to do here, right?
+        config.changes_abi = self.global_changes_abi
     end
 end
 
