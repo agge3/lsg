@@ -5,9 +5,9 @@
 -- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 
-scarg = require("scarg")
-scret = require("scret")
-util = require("util")
+local util = require("util")
+local scarg = require("scarg") -- xxx was this global for a reason?
+local scret = require("scret")
 
 local syscall = {}
 
@@ -57,34 +57,13 @@ local compat_option_sets = {
 	},
 }
 
--- Checks against both ABI changes flag or if configuration file has specified 
--- no ABI changes.
-local function checkAbi()
-    -- xxx this needs to be reworked
-    if config.changes_abi then
-        -- argalias should be:
-    	--   COMPAT_PREFIX + ABI Prefix + funcname
-    	--argprefix = config.abi_func_prefix
-   	    --funcprefix = config.abi_func_prefix
-
-    	-- XXX need clarification on if these are the same
-        --funcalias = funcprefix .. funcname
-        --argalias
-	    --self.altname = words[5]
-	    --self.alttag = words[6]
-	    --self.altrtyp = words[7]
-
-    	--noproto = false
-    end
-end
-
 --
 -- Processes the thread flag for the system call.
 -- RETURN: String thr, the appropriate thread flag
 --
-local function processThr(t)
+local function processThr(type)
     local str = "SY_THR_STATIC"
-    for k, v in pairs(t) do
+    for k, v in pairs(type) do
         if k == "NOTSTATIC" then
             str = "SY_THR_ABSENT"
         end
@@ -96,20 +75,20 @@ end
 -- Processes the capability flag for the system call.
 -- RETURN: String cap, "SYF_CAPENABLED" for capability enabled, "0" if not
 --
-local function processCap(name, t)
-    -- xxx broken right now, but will be sorted out after handling the cap stuff
-    --local str = "0"
-    --if config.capenabled[name] ~= nil or
-    --   config.capenabled[util.stripAbiPrefix(name)] ~= nil then
-    --    str = "SYF_CAPENABLED"
-    --else
-    --    for k, v in pairs(t) do
-    --        if k == "CAPENABLED" then
-    --            str = "SYF_CAPENABLED"
-    --        end
-    --    end
-    --end
-    --return str
+local function processCap(name, prefix, type)
+    local str = "0"
+    local stripped = util.stripAbiPrefix(name, prefix)
+    if config.capenabled[name] ~= nil or
+       config.capenabled[stripped] ~= nil then
+        str = "SYF_CAPENABLED"
+    else
+        for k, v in pairs(type) do
+            if k == "CAPENABLED" then
+                str = "SYF_CAPENABLED"
+            end
+        end
+    end
+    return str
 end
 
 -- XXX need to sort out how to do compat stuff...
@@ -118,13 +97,28 @@ end
 -- since the abi32 stuff does that.
 
 -- Validates a system call's type, aborts if unknown.
-local function checkType(line, t)
-	for k, v in pairs(t) do
+local function checkType(line, type)
+	for k, v in pairs(type) do
 	    if not syscall.known_flags[k] and not
             k:match("^COMPAT") then
 			util.abort(1, "Bad type: " .. k)
 		end
 	end
+end
+
+-- If there are ABI changes from native, process the system call to match the
+-- expected ABI.
+function syscall:processAbiChanges()
+    if config.changes_abi and self.name ~= nil then
+        -- argalias should be:
+        --   COMPAT_PREFIX + ABI Prefix + funcname
+    	self.argprefix = config.abi_func_prefix -- xxx issue here
+    	self.prefix = config.abi_func_prefix
+    	self.alias = self.prefix .. self.name
+        -- NOPROTO = false
+    	return false    
+    end
+    return true
 end
 
 local native = 1000000
@@ -174,37 +168,6 @@ function syscall:compat_level()
 	return native
 end
     
--- Also, where to put validation of no skipped syscall #? XXX
-
--- Validate that there's no skipped system call.
-function syscall:validate(prev)
-    -- xxx will need to have max range with this approach
-    if (self.num ~= prev + 1) then
-        abort(1, "Syscall number out of sync, missing syscall number " .. prev)
-    end
-
-    -- xxx rework this. maybe just peek last and confirm we're on track
-    --if sysnum:find("-") then
-    --	sysstart, sysend = sysnum:match("^([%d]+)-([%d]+)$")
-    --	if sysstart == nil or sysend == nil then
-    --		abort(1, "Malformed range: " .. sysnum)
-    --	end
-    --	sysnum = nil
-    --	sysstart = tonumber(sysstart)
-    --	sysend = tonumber(sysend)
-    --	if sysstart ~= maxsyscall + 1 then
-    --		abort(1, "syscall number out of sync, missing " ..
-    --		    maxsyscall + 1)
-    --	end
-    --else
-    --	sysnum = tonumber(sysnum)
-    --	if sysnum ~= maxsyscall + 1 then
-    --		abort(1, "syscall number out of sync, missing " ..
-    --		    maxsyscall + 1)
-    --	end
-    --end
-end
-
 --
 -- Adds the definition for the system call.
 -- NOTE: Is guarded by the system call number ~= nil
@@ -217,9 +180,13 @@ function syscall:addDef(line, words)
 	    self.audit = words[2]
 	    self.type = util.setFromString(words[3], "[^|]+")
 	    checkType(line, self.type)
+        -- thread flag, based on type(s) provided
         self.thr = processThr(self.type)
 	    self.name = words[4]
-        self.cap = processCap(self.name, self.type)
+        -- process changes from native, if there are any
+        self:processAbiChanges()        
+        -- capability flag, if it was provided
+        self.cap = processCap(self.name, self.prefix, self.type)
 	    -- These next three are optional, and either all present or all absent
 	    self.altname = words[5]
 	    self.alttag = words[6]
@@ -358,6 +325,7 @@ function syscall:iter()
 	local e
 	if s == nil then
 		s, e = string.match(self.num, "(%d+)%-(%d)")
+        s, e = tonumber(s), tonumber(e)
 		return function ()
 			if s <= e then
 				s = s + 1

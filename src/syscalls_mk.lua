@@ -33,6 +33,8 @@ local bsdio = require("bsdio")
 
 -- Globals
 
+local sysmk = "/dev/null"
+
 local fh = "/dev/null" -- xxx temporary
 
 -- Default configuration; any of these may get replaced by a configuration file

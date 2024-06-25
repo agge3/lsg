@@ -119,6 +119,14 @@ function FreeBSDSyscall:parse_sysfile()
             end
 		end
 	end
+
+    -- special handling for linux nosys
+    if config.syscallprefix:find("LINUX") ~= nil then
+        -- xxx do more here? want to discuss, looks like we're currently 
+        -- skipping?
+        s = nil
+    end
+
 	if s ~= nil then
 		util.abort(1, "Dangling system call at the end")
 	end

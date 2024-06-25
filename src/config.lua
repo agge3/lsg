@@ -16,86 +16,83 @@
 -- sets a number of varibale (as noted below, it used to be a .sh file that was
 -- sourced in. This dodges the need to write a command line parser.
 
--- XXX Not sure what else needs to be here, or if we should 'hoist' the merging of
--- the map this returns into the global config map since that's likely to be the
--- same everywhere.
-
--- xxx Getting closer to an answer to the above.
-
-local config = {}
-
 local util = require("util")
 
--- xxx To be added or deleted as necessary. Keeping here until decision is made.
-config.obsol = {}
-config.unimpl = {}
-config.capenabled = {}
-config.sys_no_abi_change = {}
-config.sys_abi_change = {}
-config.abi_flags = ""
-config.compat_set = {}
-local config_modified = {}
-local cleantmp = true
--- local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
+-- 
+-- Global config map.
+-- Default configuration is native, amd64. Any of these may get replaced by a 
+-- configuration file optionally specified. 
+--
+config = {
+    sysnames = "syscalls.c",
+    sysproto = "sysproto.h",
+    sysproto_h = "_SYS_SYSPROTO_H_",
+    syshdr = "syscall.h",
+    syssw = "init_sysent.c",
+    syscallprefix = "SYS_",
+    switchname = "sysent",   
+    namesname = "syscallnames", 
+    abi_flags = {},
+    abi_func_prefix = "",
+    abi_type_suffix = "",
+    abi_long = "long",
+    abi_u_long = "u_long",
+    abi_semid_t = "semid_t",
+    abi_size_t = "size_t",
+    abi_ptr_array_t = "",
+    abi_headers = "",
+    abi_intptr_t = "intptr_t",
+    ptr_intptr_t_cast = "intptr_t",
+    syscall_abi_change = {},        -- System calls that require ABI-specific handling
+    syscall_no_abi_change = {},     -- System calls that appear to require handling, but don't
+    obsol = {},     -- OBSOL system calls
+    unimpl = {},    -- System calls without implementations
+    capabilities_conf = "capabilities.conf",
+    compat_set = "native",
+    mincompat = 0,
+    capenabled = {},
+}
 
--- Important boolean keys: configuration file optionally specified and changes 
--- to the default ABI.
-config.config_file = false
+-- Keep track of modifications if there are.
+config.mod = {}
+
+-- Important boolean keys: file, changes to the ABI, or no changes to the ABI. 
+config.file = false
 config.no_changes_abi = false
 config.changes_abi = false or not config.no_changes_abi
 
--- Default configuration; any of these may get replaced by a configuration file
--- optionally specified.
-config.default = {
-    abi_func_prefix = "",
-	abi_type_suffix = "",
-    abi_intptr_t = "intptr_t",
-}
-
--- Each entry should have a value so we can represent ABI flags as a bitmask
--- for convenience.  One may also optionally provide an expr; this gets applied
--- to each argument type to indicate whether this argument is subject to ABI
--- change given the configured flags.
+-- For each entry, the ABI flag is the key. One may also optionally provide an 
+-- expr, which are contained in an array associated with each key; expr gets 
+-- applied to each argument type to indicate whether this argument is subject to 
+-- ABI change given the configured flags.
 config.known_abi_flags = {
 	long_size = {
-		value	= 0x00000001,
-		exprs	= {
-			"_Contains[a-z_]*_long_",
-			"^long [a-z0-9_]+$",
-			"long [*]",
-			"size_t [*]",
-			-- semid_t is not included because it is only used
-			-- as an argument or written out individually and
-			-- said writes are handled by the ksem framework.
-			-- Technically a sign-extension issue exists for
-			-- arguments, but because semid_t is actually a file
-			-- descriptor negative 32-bit values are invalid
-			-- regardless of sign-extension.
-		},
+		"_Contains[a-z_]*_long_",
+		"^long [a-z0-9_]+$",
+		"long [*]",
+		"size_t [*]",
+		-- semid_t is not included because it is only used
+		-- as an argument or written out individually and
+		-- said writes are handled by the ksem framework.
+		-- Technically a sign-extension issue exists for
+		-- arguments, but because semid_t is actually a file
+		-- descriptor negative 32-bit values are invalid
+		-- regardless of sign-extension.
 	},
 	time_t_size = {
-		value	= 0x00000002,
-		exprs	= {
-			"_Contains[a-z_]*_timet_",
-		},
+		"_Contains[a-z_]*_timet_",
 	},
 	pointer_args = {
-		value	= 0x00000004,
+        -- no expr
 	},
 	pointer_size = {
-		value	= 0x00000008,
-		exprs	= {
-			"_Contains[a-z_]*_ptr_",
-			"[*][*]",
-		},
+		"_Contains[a-z_]*_ptr_",
+		"[*][*]",
 	},
 	pair_64bit = {
-		value	= 0x00000010,
-		exprs	= {
-			"^dev_t[ ]*$",
-			"^id_t[ ]*$",
-			"^off_t[ ]*$",
-		},
+		"^dev_t[ ]*$",
+		"^id_t[ ]*$",
+		"^off_t[ ]*$",
 	},
 }
 
@@ -167,45 +164,45 @@ function config.process(file)
 	return cfg
 end
 
--- Either returns nil and a message, or mutates cfg and cfg_mod based on the 
--- provided configuration file.
-function config.mergeGlobal(fh, cfg, cfg_mod)
+-- Merges processed configuration file into the global config map (see above),
+-- or returns NIL and a message.
+function config.merge(fh)
     if fh ~= nil then
     	local res = assert(config.process(fh))
     
     	for k, v in pairs(res) do
-    		if v ~= cfg[k] then
-    			cfg[k] = v
-    			cfg_mod[k] = true
+    		if v ~= config[k] then
+                -- handling of sets
+                if v:find("abi_flags") then
+                    -- match for pipe, that's how abi_flags is formatted
+                    table.insert(config[k], util.setFromString(v, "[^|]+"))
+                elseif v:find("capenabled") or
+                        v:find("syscall_abi_change") or
+                        v:find("syscall_no_abi_change") or
+                        v:find("obsol") or
+                        v:find("unimpl") then
+                    -- match for space, that's how these are formatted
+                    table.insert(config[k], util.setFromString(v, "[^ ]+"))
+                else
+    			    config[k] = v
+                end
+                -- construct config modified table as config is processed
+                config.mod[k] = true
     		end
+            config.mod[k] = false  -- config wasn't modified
     	end
     end
 end
 
--- xxx this needs to be reworked, we're not doing bitmasks anymore
+-- Returns TRUE if there are ABI changes from native for the provided ABI flag. 
 function config.abiChanges(name)
-    local abi_flags_mask = 0
 	if config.known_abi_flags[name] == nil then
 		util.abort(1, "abi_changes: unknown flag: " .. name)
 	end
-
-	return abi_flags_mask & config.known_abi_flags[name].value ~= 0
+    return config.abi_flags[name] ~= nil
 end
 
--- xxx these won't be necessary, but keeping for now
---function config.get_mask(flags)
---	local mask = 0
---	for _, v in ipairs(flags) do
---		if config.known_flags[v] == nil then
---			abort(1, "Checking for unknown flag " .. v)
---		end
---
---		mask = mask | known_flags[v]
---	end
---
---	return mask
---end
---
+-- xxx for myself, haven't found the relevancy yet
 --function config.get_mask_pat(pflags)
 --	local mask = 0
 --	for k, v in pairs(config.known_flags) do
@@ -215,45 +212,6 @@ end
 --	end
 --
 --	return mask
---end
-
--- xxx probably should be in class syscall
---function config.global_abi_changes()
---    if config.changes_abi then
---    	-- argalias should be:
---    	--   COMPAT_PREFIX + ABI Prefix + funcname
---    	argprefix = config.abi_func_prefix
---    	funcprefix = config.abi_func_prefix
---    	funcalias = funcprefix .. funcname
---    	noproto = false
---    end
---end
-
--- xxx putting these here for now
---local function process_abi_flags()
---	local flags, mask = config.abi_flags, 0
---	for txtflag in flags:gmatch("([^|]+)") do
---		if known_abi_flags[txtflag] == nil then
---			abort(1, "Unknown abi_flag: " .. txtflag)
---		end
---
---		mask = mask | known_abi_flags[txtflag].value
---	end
---
---	config.abi_flags_mask = mask
---end
---
----- FOR changes_abi
---local function process_syscall_abi_change()
---	local changes_abi = config.syscall_abi_change
---	for syscall in changes_abi:gmatch("([^ ]+)") do
---		config.sys_abi_change[syscall] = true
---	end
---
---	local no_changes = config.syscall_no_abi_change
---	for syscall in no_changes:gmatch("([^ ]+)") do
---		config.sys_no_abi_change[syscall] = true
---	end
 --end
 
 return config

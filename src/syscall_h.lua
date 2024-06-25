@@ -33,14 +33,9 @@ local bsdio = require("bsdio")
 
 -- Globals
 
--- Default configuration; any of these may get replaced by a configuration file
--- optionally specified. A lot of these are passed into the fbsd_sys parser and
--- the bsd_user code generator A bit tricky because a lot of the inherited code
--- has a global config table that it referrs to deep in the call tree... need to
--- make sure that all that code is converted to using one local to the object.
-local cfg = {
-	syscallprefix = "SYS_"
-}
+local fh = "/dev/null" -- xxx temporary
+
+local syshdr = "" .. ".h"
 
 -- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
 -- replaced system calls dating back to FreeBSD 7. We are lucky that the
@@ -55,7 +50,7 @@ local function genSyscallsH(tbl, cfg)
     local bio = bsdio:new({ }, fh) 
 
     -- Write the generated tag.
-	bio.generated("System call numbers.")
+	bio:generated("System call numbers.")
 
 	for k, v in pairs(s) do
 		local c = v:compat_level()
@@ -95,11 +90,9 @@ end
 
 local sysfile, configfile = arg[1], arg[2]
 
-local cfg_mod = { }
-
-config.mergeGlobal(configfile, cfg, cfg_mod)
+config.merge(configfile)
 
 -- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
+local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 
-genSyscallsH(tbl, cfg)
+genSyscallsH(tbl, config)

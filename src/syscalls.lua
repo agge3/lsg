@@ -12,3 +12,5 @@
 --
 -- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
 --
+
+local sysnames = "" .. ".c"
