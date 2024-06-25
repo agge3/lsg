@@ -20,7 +20,7 @@ local util = require("util")
 
 -- 
 -- Global config map.
--- Default configuration is amd64 native. Any of these may get replaced by a 
+-- Default configuration is native, amd64. Any of these may get replaced by a 
 -- configuration file optionally specified. 
 --
 config = {
@@ -30,8 +30,8 @@ config = {
     syshdr = "syscall.h",
     syssw = "init_sysent.c",
     syscallprefix = "SYS_",
-    switchname = "sysent",          -- xxx 
-    namesname = "syscallnames",     -- xxx
+    switchname = "sysent",   
+    namesname = "syscallnames", 
     abi_flags = {},
     abi_func_prefix = "",
     abi_type_suffix = "",
@@ -45,7 +45,6 @@ config = {
     ptr_intptr_t_cast = "intptr_t",
     syscall_abi_change = {},        -- System calls that require ABI-specific handling
     syscall_no_abi_change = {},     -- System calls that appear to require handling, but don't
-    -- xxx why don't we just set these tables below when we merge?
     obsol = {},     -- OBSOL system calls
     unimpl = {},    -- System calls without implementations
     capabilities_conf = "capabilities.conf",
@@ -174,7 +173,6 @@ function config.merge(fh)
     	for k, v in pairs(res) do
     		if v ~= config[k] then
                 -- handling of sets
-                -- xxx haven't tested implementation, but you get the idea
                 if v:find("abi_flags") then
                     -- match for pipe, that's how abi_flags is formatted
                     table.insert(config[k], util.setFromString(v, "[^|]+"))
@@ -197,7 +195,6 @@ function config.merge(fh)
 end
 
 -- Returns TRUE if there are ABI changes from native for the provided ABI flag. 
--- xxx test in interpreter, lua indexing has a lot of semantics
 function config.abiChanges(name)
 	if config.known_abi_flags[name] == nil then
 		util.abort(1, "abi_changes: unknown flag: " .. name)

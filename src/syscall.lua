@@ -5,10 +5,9 @@
 -- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 
-scarg = require("scarg")
-scret = require("scret")
 local util = require("util")
-require("test.dump")
+local scarg = require("scarg") -- xxx was this global for a reason?
+local scret = require("scret")
 
 local syscall = {}
 
@@ -178,9 +177,7 @@ function syscall:addDef(line, words)
     if self.num == nil then
         -- sort out range somehow XXX
 	    self.num = words[1]
-        dump(self.num)
 	    self.audit = words[2]
-        dump(self.audit)
 	    self.type = util.setFromString(words[3], "[^|]+")
 	    checkType(line, self.type)
         -- thread flag, based on type(s) provided
@@ -213,7 +210,6 @@ function syscall:addFunc(line, words)
 
 	    local ret = scret:new({ }, words[1])
         self.rettype = ret:add()
-        dump(line)
 
 	    self.name = words[2]:match("([%w_]+)%(")
 	    if words[2]:match("%);$") then
@@ -239,7 +235,6 @@ function syscall:addArgs(line)
 
         -- scarg is going to instantiate itself with its own methods
 	    local arg = scarg:new({ }, line)
-        dump(line)
         -- if arg processes, then add. if not, don't add
         if arg:process() then 
             arg:append(self.args)

@@ -37,15 +37,6 @@ local fh = "/dev/null" -- xxx temporary
 
 local syshdr = "" .. ".h"
 
--- Default configuration; any of these may get replaced by a configuration file
--- optionally specified. A lot of these are passed into the fbsd_sys parser and
--- the bsd_user code generator A bit tricky because a lot of the inherited code
--- has a global config table that it referrs to deep in the call tree... need to
--- make sure that all that code is converted to using one local to the object.
---local cfg = {
---	syscallprefix = "SYS_"
---}
-
 -- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
 -- replaced system calls dating back to FreeBSD 7. We are lucky that the
 -- system call filename is just the base symbol name for it.

@@ -24,7 +24,7 @@ scarg.__index = scarg
 -- there are.
 local function checkAbiChanges(arg)
 	for k, v in pairs(config.known_abi_flags) do
-		if config.abiChanges(k) ~= nil then
+		if config.abiChanges(k) and v ~= nil then
 			for _, e in pairs(v) do
 				if arg:find(e) then
 					return true

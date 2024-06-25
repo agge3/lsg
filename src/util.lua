@@ -47,7 +47,7 @@ end
 --
 -- EXAMPLE: param: {"foo", "bar"}, return: {foo = true, bar = true}
 --
-function util.set(t, bool)
+function util.set(t)
 	local s = { }
 	for _,v in pairs(t) do s[v] = true end
 	return s

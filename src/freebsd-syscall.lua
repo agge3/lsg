@@ -12,7 +12,6 @@
 -- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
 
 local syscall = require("syscall")
-require("test.dump")
 
 local FreeBSDSyscall = {}
 
