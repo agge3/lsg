@@ -58,20 +58,6 @@ end
 
 local sysfile, configfile = arg[1], arg[2]
 
--- process_config either returns nil and a message, or a table that we should
--- merge into the global config. XXX Seems like this should be in
--- config.something instead of bare code.
-if configfile ~= nil then
-	local res = assert(config.process(configfile))
-
-	for k, v in pairs(res) do
-		if v ~= config[k] then
-			config[k] = v
-			config_modified[k] = true
-		end
-	end
-end
-
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 

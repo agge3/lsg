@@ -20,7 +20,7 @@ bsdio.__index = bsdio
 
 -- Simple wrapper for lua IO best practice. For a simpler write call.
 function bsdio:write(line)
-	assert(self.fh:write(line))
+	assert(self.bsdio:write(line))
 end
 
 -- xxx just to print output for now, and still use class
@@ -108,14 +108,10 @@ end
 function bsdio:new(obj, fh)
     obj = obj or { }
     setmetatable(obj, self)
-    self.__index == self
+    self.__index = self
 
-    self.bsdio = fh
+    self.bsdio = assert(io.open(fh, "w+"))
     self.tag = "@" .. "generated" 
-
-    if self.bsdio == nil then
-        util.abort("Not found: " .. self.bsdio)
-    end
 
     return obj
 end

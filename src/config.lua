@@ -188,8 +188,10 @@ function config.merge(fh)
                 else
     			    config[k] = v
                 end
-    			mod[k] = true
+                -- construct config modified table as config is processed
+                config.mod[k] = true
     		end
+            config.mod[k] = false  -- config wasn't modified
     	end
     end
 end
