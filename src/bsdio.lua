@@ -18,7 +18,7 @@ local bsdio = {}
 
 bsdio.__index = bsdio
 
--- Simple wrapper for lua IO best practice. For a simpler write call.
+-- Wrapper for lua write() best practice. For a simpler write call.
 function bsdio:write(line)
 	assert(self.bsdio:write(line))
 end
@@ -29,9 +29,10 @@ function bsdio:print(line)
 end
 
 --
--- An IO macro for the PAD64 preprocessor directive. 
+-- A write macro for the PAD64 preprocessor directive. 
 -- PARAM: bool, TRUE to pad
--- USAGE: Pass the result of ABI checks and padding will be done if necessary.
+-- USAGE: Pass config.abiChanges("pair_64bit") and padding will be done if 
+-- necessary. Useful for 32-bit configurations.
 --
 function bsdio:pad64(bool)
     if bool then

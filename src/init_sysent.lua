@@ -33,18 +33,7 @@ local bsdio = require("bsdio")
 
 -- Globals
 
-local switchname = "" .. "_sysent"
-
 local fh = "/dev/null" -- xxx temporary
-
--- Default configuration; any of these may get replaced by a configuration file
--- optionally specified. A lot of these are passed into the fbsd_sys parser and
--- the bsd_user code generator A bit tricky because a lot of the inherited code
--- has a global config table that it referrs to deep in the call tree... need to
--- make sure that all that code is converted to using one local to the object.
-local cfg = {
-
-}
 
 -- Should be the same as makesyscalls.lua generates, except that we don't bother
 -- to align the system call stuff... it's badly broken anyway and looks like crap
@@ -83,7 +72,6 @@ local function genInitSysent(tbl, config)
 		end
 	end
 
-	-- xxx switchname doesn't exist yet
 	bio:print(string.format([[
 
 /* The casts are bogus but will do for now. */
@@ -134,7 +122,6 @@ struct sysent %s[] = {
 	    	end
 	    end
 
-	    -- xxx alias
         bio:write(string.format("/* %d = %s */\n",
 	        v.num, v.alias))
 
@@ -155,13 +142,13 @@ struct sysent %s[] = {
 	    	    ".sy_thrcnt = SY_THR_ABSENT },",
 	    	    "0", "lkmressys", "AUE_NULL"))
 	    else
-            -- xxx wrap??
+            -- xxx wrap
 	    	bio:write(string.format(
 	    	    "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
 	    	    wrap, argssize, v.name, v.audit, v.cap, v.thr))
 	    end
 
-	    -- xxx descr alias
+	    -- xxx alias
         bio:write(string.format("/* %d = %s %s */\n",
 	        v.num, descr, v.alias))
 
@@ -197,11 +184,9 @@ end
 
 local sysfile, configfile = arg[1], arg[2]
 
-local cfg_mod = {}
-
-config.mergeGlobal(fh, cfg, cfg_mod)
+config.merge(configfile)
 
 -- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
+local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 
 genInitSysent(tbl, config)

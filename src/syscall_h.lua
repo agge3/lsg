@@ -3,6 +3,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
+-- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 --
 -- Thanks to Kyle Evans for his makesyscall.lua in FreeBSD which served as
@@ -40,7 +41,7 @@ local syshdr = "" .. ".h"
 -- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
 -- replaced system calls dating back to FreeBSD 7. We are lucky that the
 -- system call filename is just the base symbol name for it.
-local function genSyscallsH(tbl, cfg)
+local function genSyscallsH(tbl, config)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
@@ -61,7 +62,7 @@ local function genSyscallsH(tbl, cfg)
 			v.type.NOSTD or
 			v.type.SYSMUX or
 			c >= 7 then
-			print(string.format("#define\t%s%s\t%d", cfg.syscallprefix, v:symbol(), v.num))
+			print(string.format("#define\t%s%s\t%d", config.syscallprefix, v:symbol(), v.num))
 		elseif c >= 0 then
 			local s
 			if c == 0 then
@@ -79,7 +80,7 @@ local function genSyscallsH(tbl, cfg)
 		else -- do nothing
 		end
 	end
-	print(string.format("#define\t%sMAXSYSCALL\t%d", cfg.syscallprefix, max + 1))
+	print(string.format("#define\t%sMAXSYSCALL\t%d", config.syscallprefix, max + 1))
 end
 
 -- Entry

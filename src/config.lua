@@ -20,7 +20,7 @@ local util = require("util")
 
 -- 
 -- Global config map.
--- Default configuration is native, amd64. Any of these may get replaced by a 
+-- Default configuration is native (amd64). Any of these may get replaced by a 
 -- configuration file optionally specified. 
 --
 config = {
@@ -202,7 +202,7 @@ function config.abiChanges(name)
     return config.abi_flags[name] ~= nil
 end
 
--- xxx for myself, haven't found the relevancy yet
+-- xxx for myself, will remove when isn't useful.
 --function config.get_mask_pat(pflags)
 --	local mask = 0
 --	for k, v in pairs(config.known_flags) do

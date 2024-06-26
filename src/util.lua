@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
+-- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 
 -- Derived in large part from makesyscalls.lua:
@@ -111,6 +112,12 @@ function util.is64bitType(type)
         or type:find("^off_t[ ]*$")
 end
 
+-- 
+-- Strip the ABI function prefix if it exists (e.g., "freebsd32_").
+--
+-- RETURN: The original function name, or the function name with the ABI prefix
+-- stripped
+--
 function util.stripAbiPrefix(funcname, abiprefix)
 	local stripped_name
 	if funcname == nil then
