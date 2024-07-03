@@ -167,6 +167,30 @@ function syscall:compat_level()
 	end
 	return native
 end
+
+-- xxx
+function syscall:processCompat()
+	for _, v in pairs(compat_options) do
+		if v.stdcompat ~= nil then
+			local stdcompat = v.stdcompat
+			v.definition = "COMPAT_" .. stdcompat:upper()
+			v.compatlevel = tonumber(stdcompat:match("([0-9]+)$"))
+			v.flag = stdcompat:gsub("FREEBSD", "COMPAT")
+			v.prefix = stdcompat:lower() .. "_"
+			v.descr = stdcompat:lower()
+		end
+
+        -- xxx not necessary anymore
+		--local tmpname = "sys" .. v.flag:lower()
+		--local dcltmpname = tmpname .. "dcl"
+		--files[tmpname] = io.tmpfile()
+		--files[dcltmpname] = io.tmpfile()
+		v.tmp = tmpname
+		v.dcltmp = dcltmpname
+
+		v.count = 0
+	end
+end
     
 --
 -- Adds the definition for the system call.

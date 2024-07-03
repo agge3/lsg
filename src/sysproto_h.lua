@@ -36,21 +36,7 @@ local bsdio = require("bsdio")
 local sysproto = "" .. ".h"
 local sysproto_h = "" .. "_SYSPROTO_H_"
 
-local cfg = {
-    syscallprefix = "SYS_" -- xxx this will be needed here
-}
-
--- xxx this likely does not to be a data structure, but don't have a final 
--- decision on it
-local noncompat = util.set {
-    "STD",
-    "NODEF", 
-    "NOARGS", 
-    "NOPROTO",
-    "NOSTD",
-}
-
-local function genSysprotoH(tbl, cfg)
+local function genSysprotoH(tbl, config)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
@@ -71,12 +57,61 @@ local function genSysprotoH(tbl, cfg)
         if v.num > max then
             max = v.num
         end
-        if v.type.STD or
-           v.type.NODEF or
-           v.type.NOARGS or
-           v.type.NOPROTO or
-           v.type.NOSTD then
-        -- xxx do nothing for now, handle noncompat
+
+        -- Handle non-compatability.
+        -- xxx going to convert these to *not* negations, following flow of
+        -- makesyscalls.lua for now.
+        if not v.type.NOARGS or
+           not v.type.NOPROTO or
+           not v.type.NODEF then
+            if #v.args > 0 then
+                -- fh = sysarg
+                bio:write(string.format("struct %s {\n",
+			        v.alias))
+			    for _, v in ipairs(v.args) do -- XXX
+				    if v.type == "int" and v.name == "_pad" then 
+                        bio:pad(config.abiChanges("pair_64bit"))
+                        -- xxx expected: "#ifdef PAD64_REQUIRED\n"
+                    end
+				    bio:write(string.format(
+                        "\tchar %s_l_[PADL_(%s)]; %s %s; char %s_r_[PADR_(%s)];\n",
+                        v.name, v.type,
+				        v.type, v.name,
+				        v.name, v.type))
+                    if v.type == "int" and v.name = "_pad" then
+                        bio:pad(config.abiChanges("pair_64bit"))
+                        -- xxx expected: "#endif\n"
+				end
+                bio:write("};\n")
+            else
+                -- fh = sysarg
+                bio:write(string.format(
+			        "struct %s {\n\tsyscallarg_t dummy;\n};\n", v.alias))
+            end
+        else if not v.type.NOPROTO or
+                not v.type.NODEF then
+            local sys_prefix = "sys_"
+            -- xxx generalize this condition, it can be reused and named 
+            --clear what it's implying
+            if v.name == "nosys" or v.name == "lkmnosys" or
+               v.name == "sysarch" or v.name:find("^freebsd") or
+               v.name:find("^linux") then
+                sys_prefix = ""
+            end
+            -- fh = sysdcl
+            bio:write(string.format(
+                "%s\t%s%s(struct thread *, struct %s *);\n",
+		        v.rettype, v.prefix, v.name, v.alias))
+            -- fh = sysaue
+		    bio:write(string.format("#define\t%sAUE_%s\t%s\n",
+		        config.syscallprefix, v.alias, v.audit)) 
+        end
+        -- noncompat done
+        
+
+
+                   
+
         elseif c >=7 then
         -- xxx do nothing for now, handle compat -- trace "out" in 
         -- makesyscalls.lua 
@@ -94,11 +129,9 @@ end
 
 local sysfile, configfile = arg[1], arg[2]
 
-local cfg_mod = { }
-
-config.mergeGlobal(configfile, cfg, cfg_mod)
+config.merge(config)
 
 -- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = cfg}
+local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 
-genSysprotoH(tbl, cfg)
+genSysprotoH(tbl, config)

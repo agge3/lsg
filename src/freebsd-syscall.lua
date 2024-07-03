@@ -21,43 +21,37 @@ FreeBSDSyscall.__index = FreeBSDSyscall
 local function validate()
 end
 
--- xxx this will likely need to go here
+-- xxx still deciding where this should be done at
+-- Processes compatability options in the global config and inserts them into
+-- known_flags to reference.
 function FreeBSDSyscall:processCompat()
-    -- xxx haven't reworked yet
-	--local nval = 0
-	--for _, v in pairs(known_flags) do
-	--	if v > nval then
-	--		nval = v
-	--	end
-	--end
+	for _, v in pairs(config.compat_options) do
+		if v.stdcompat ~= nil then
+			local stdcompat = v.stdcompat
+			v.definition = "COMPAT_" .. stdcompat:upper()
+			v.compatlevel = tonumber(stdcompat:match("([0-9]+)$"))
+			v.flag = stdcompat:gsub("FREEBSD", "COMPAT")
+			v.prefix = stdcompat:lower() .. "_"
+			v.descr = stdcompat:lower()
+		end
 
-	--nval = nval << 1
-	--for _, v in pairs(compat_options) do
-	--	if v.stdcompat ~= nil then
-	--		local stdcompat = v.stdcompat
-	--		v.definition = "COMPAT_" .. stdcompat:upper()
-	--		v.compatlevel = tonumber(stdcompat:match("([0-9]+)$"))
-	--		v.flag = stdcompat:gsub("FREEBSD", "COMPAT")
-	--		v.prefix = stdcompat:lower() .. "_"
-	--		v.descr = stdcompat:lower()
-	--	end
+        -- xxx not doing tmp files anymore
+		--local tmpname = "sys" .. v.flag:lower()
+		--local dcltmpname = tmpname .. "dcl"
+		--files[tmpname] = io.tmpfile()
+		--files[dcltmpname] = io.tmpfile()
+		--v.tmp = tmpname
+		--v.dcltmp = dcltmpname
 
-	--	local tmpname = "sys" .. v.flag:lower()
-	--	local dcltmpname = tmpname .. "dcl"
-	--	files[tmpname] = io.tmpfile()
-	--	files[dcltmpname] = io.tmpfile()
-	--	v.tmp = tmpname
-	--	v.dcltmp = dcltmpname
+		-- Add compat option to config.known_flags
+	    table.insert(config.known_flags, v.flag)
 
-	--	known_flags[v.flag] = nval
-	--	v.mask = nval
-	--	nval = nval << 1
-
-	--	v.count = 0
-	--end
+		-- xxx decide if this way of the doing it is necessary
+		v.count = 0
+	end
 end
 
-function FreeBSDSyscall:parse_sysfile()
+function FreeBSDSyscall:parseSysfile()
 	local file = self.sysfile
 	local config = self.config
 	local commentExpr = "^%s*;.*"
@@ -140,8 +134,9 @@ function FreeBSDSyscall:new(obj)
 	obj = obj or { }
 	setmetatable(obj, self)
 	self.__index = self
-
-	obj:parse_sysfile()
+    
+    obj:processCompat()
+	obj:parseSysfile()
 
 	return obj
 end
