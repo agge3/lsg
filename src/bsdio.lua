@@ -25,7 +25,7 @@ end
 
 -- xxx just to print output for now, and still use class
 function bsdio:print(line)
-    print(line)
+    io.write(line)
 end
 
 --

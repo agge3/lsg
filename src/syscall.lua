@@ -112,9 +112,9 @@ function syscall:processAbiChanges()
     if config.changes_abi and self.name ~= nil then
         -- argalias should be:
         --   COMPAT_PREFIX + ABI Prefix + funcname
-    	self.argprefix = config.abi_func_prefix -- xxx issue here
+    	self.arg_prefix = config.abi_func_prefix -- xxx issue here
     	self.prefix = config.abi_func_prefix
-    	self.alias = self.prefix .. self.name
+    	self.arg_alias = self.prefix .. self.name
         -- NOPROTO = false
     	return false    
     end
@@ -204,15 +204,9 @@ function syscall:addDef(line, words)
 	    self.audit = words[2]
 	    self.type = util.setFromString(words[3], "[^|]+")
 	    checkType(line, self.type)
-        -- thread flag, based on type(s) provided
-        self.thr = processThr(self.type)
 	    self.name = words[4]
-        -- process changes from native, if there are any
-        self:processAbiChanges()        
-        -- capability flag, if it was provided
-        self.cap = processCap(self.name, self.prefix, self.type)
 	    -- These next three are optional, and either all present or all absent
-	    self.altname = words[5]
+	    self.altname = words[5] -- xxx set alias here's it an alt alias
 	    self.alttag = words[6]
 	    self.altrtyp = words[7]
 	    return self.name == "{"
@@ -234,7 +228,7 @@ function syscall:addFunc(line, words)
 
 	    local ret = scret:new({ }, words[1])
         self.rettype = ret:add()
-
+    
 	    self.name = words[2]:match("([%w_]+)%(")
 	    if words[2]:match("%);$") then
             -- now we're looking for ending curly brace
@@ -280,9 +274,52 @@ function syscall:isAdded(line)
 	    if not line:match("}$") then
 	    	util.abort(1, "Expected '}' found '" .. line .. "' instead.")
 	    end
+        self:finalize()
         return true
     end
     return false
+end
+
+-- Once we have a good syscall, add some final information to it, based on how 
+-- it was instantiated.
+function syscall:finalize()
+    -- These may be changed by processAbiChanges(), or they'll remain empty for 
+    -- native.
+    self.prefix = ""
+    self.arg_prefix = ""
+
+    -- capability flag, if it was provided
+    self.cap = processCap(self.name, self.prefix, self.type)
+    -- thread flag, based on type(s) provided
+    self.thr = processThr(self.type)
+
+    -- process changes from native, if there are any
+    -- xxx flag needs to work first
+    --self:processAbiChanges()
+
+    -- xxx some goto's that may be getting lost, still working on
+    if self.name ~= nil then
+        self.name = self.prefix .. self.name
+    end
+
+    -- xxx set the alt alias elsewhere
+    if self.alias == nil or self.alias == "" then
+        self.alias = self.name
+    end
+
+    -- Handle argument(s) alias.
+    if self.arg_alias == nil and self.name ~= nil then
+        -- xxx refer line 1330 makesyscalls.lua
+        self.arg_alias = self.name .. "_args"
+        if config.compat_options[native] then -- xxx index this key properly
+            -- xxx also index this properly
+            self.arg_alias = compat_options[native].prefix .. arg_alias
+        end
+    elseif self.arg_alias ~= nil then 
+        self.arg_alias = self.arg_prefix .. self.arg_alias
+    else
+        self.arg_alias = "IM BREAKING HERE"
+    end
 end
 
 --

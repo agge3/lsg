@@ -43,7 +43,14 @@ local fh = "/dev/null" -- xxx temporary
 
 -- xxx need compat call count
 
+-- xxx needs attention, semi-working
 local function alignSysentComment(column)
+    io.write("\t")
+    column = column + 8 - column % 8
+    while column < 56 do
+        io.write("\t")
+        column = column + 8
+    end
 end
 
 local function genInitSysent(tbl, config)
@@ -59,7 +66,7 @@ local function genInitSysent(tbl, config)
     bio:generated("System call switch table.")
 
 	bio:print(tbl.includes)
-	bio:print("\n#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))")
+	bio:print("#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))")
 
     -- Keep track of columns to align sysent comment.
     local column
@@ -70,10 +77,15 @@ local function genInitSysent(tbl, config)
             max = v.num
         end
 
+        -- xxx temporary
+        if v.alias == nil then
+            v.alias = "broken alias"
+        end
+
         -- xxx argssize - seems like this could be made reusable, where to put?
         local argssize
         if #v.args > 0 or v.type.NODEF then
-            argssize = "AS( " .. v.alias .. ")"
+            argssize = "AS(" .. v.arg_alias .. ")"
         else
             argssize = "0"
         end
@@ -92,7 +104,7 @@ local function genInitSysent(tbl, config)
             column = column + #"nosys" + #"AUE_NULL" + 3
             -- xxx better organize this repeat line
             alignSysentComment(column)
-            bio:write(string.format("/* %d = %s */\n",
+            bio:print(string.format("/* %d = %s */\n",
 	            v.num, v.alias))
 
         -- Handle NOSTD flag. 
@@ -108,7 +120,7 @@ local function genInitSysent(tbl, config)
 		    column = column + #"lkmressys" + #"AUE_NULL" + 3
             alignSysentComment(column)
             -- xxx better organize this repeat line
-            bio:write(string.format("/* %d = %s */\n",
+            bio:print(string.format("/* %d = %s */\n",
 	            v.num, v.alias))
 
         -- Handle rest of non-compatability.
@@ -127,27 +139,25 @@ local function genInitSysent(tbl, config)
                v.name == "sysarch" or
                v.name:find("^freebsd") or
 	    	   v.name:find("^linux") then
-	    	    bio:write(string.format(
-                    "%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	    	    bio:print(string.format("%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
 	    		    v.name, v.audit, v.cap, v.thr))
                 column = column + #v.name + #v.audit + #v.cap + 3
 	    	else
-	    		bio:write(string.format(
-	    		    "sys_%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	    		bio:print(string.format("sys_%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
 	    		    v.name, v.audit, v.cap, v.thr))
                 column = column + #v.name + #v.audit + #v.cap + 7
 	    	end
             
             alignSysentComment(column)
             -- xxx better organize this repeat line
-            bio:write(string.format("/* %d = %s */\n",
+            bio:print(string.format("/* %d = %s */\n",
 	            v.num, v.alias))
 
         -- Handle compatability.
         elseif c >= 7 then
             -- xxx needs further attention on sorting
             if v.type.NOSTD then
-	        	bio:write(string.format(
+	        	bio:print(string.format(
 	        	    "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)%s, " ..
 	        	    ".sy_auevent = %s, .sy_flags = 0, " ..
 	        	    ".sy_thrcnt = SY_THR_ABSENT },",
@@ -155,14 +165,14 @@ local function genInitSysent(tbl, config)
 	        else
                 -- xxx wrap
                 local wrap = ""
-	        	bio:write(string.format(
+	        	bio:print(string.format(
 	        	    "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
 	        	    wrap, argssize, v.name, v.audit, v.cap, v.thr))
 	        end
 
             -- xxx descr
             local descr = ""
-            bio:write(string.format("/* %d = %s %s */\n",
+            bio:print(string.format("/* %d = %s %s */\n",
 	            v.num, descr, v.alias))
 
         -- Handle different compatability options.
@@ -179,12 +189,12 @@ local function genInitSysent(tbl, config)
         
         -- Handle obsolete.
         elseif v.type.OBSOL then
-	        bio:write(
+	        bio:print(
 	            "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 	            ".sy_auevent = AUE_NULL, .sy_flags = 0, .sy_thrcnt = SY_THR_ABSENT },")
 	        -- xxx comment
             local comment = ""
-            bio:write("sysent", string.format("/* %d = obsolete %s */\n",
+            bio:print(string.format("/* %d = obsolete %s */\n",
 	            v.num, comment))
 
         -- Handle reserved.
@@ -202,7 +212,7 @@ local function genInitSysent(tbl, config)
 
 	        --sysnum = sysstart
 	        --while sysnum <= sysend do
-	        --	bio:write(string.format(
+	        --	bio:print(string.format(
 	        --	    "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 	        --	    ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
 	        --	    ".sy_thrcnt = SY_THR_ABSENT },\t\t\t/* %d = %s */\n",
@@ -212,10 +222,10 @@ local function genInitSysent(tbl, config)
 
         else -- do nothing
         end
-	    
-        -- End
-        print("};")
     end
+
+    -- End
+    print("};")
 end
 
 -- Entry
