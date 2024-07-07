@@ -309,12 +309,9 @@ function syscall:finalize()
 
     -- Handle argument(s) alias.
     if self.arg_alias == nil and self.name ~= nil then
-        -- xxx refer line 1330 makesyscalls.lua
-        self.arg_alias = self.name .. "_args"
-        if config.compat_options[native] then -- xxx index this key properly
-            -- xxx also index this properly
-            self.arg_alias = compat_options[native].prefix .. arg_alias
-        end
+        -- Symbol will either be: (native) the same as the system call name, or 
+        -- (non-native) the correct modified symbol for the arg_alias
+        self.arg_alias = self:symbol() .. "_args"
     elseif self.arg_alias ~= nil then 
         self.arg_alias = self.arg_prefix .. self.arg_alias
     else

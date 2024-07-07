@@ -244,13 +244,13 @@ end
 -- options (may remain empty if no compatability options are required (e.g., 
 -- native)).
 -- 
-function config.compat()
+function config.mergeCompat()
     if config.compat_set ~= "" then
-    	if not compat_options_sets[config.compat_set] then
+    	if not compat_option_sets[config.compat_set] then
     		util.abort(1, "Undefined compat set: " .. compat_set)
     	end
     
-    	config.compat_options = config.compat_option_sets[config.compat_set]
+    	config.compat_options = compat_option_sets[config.compat_set]
     else
     	config.compat_options = {}
     end

@@ -67,25 +67,27 @@ function bsdio:generated(str, comment)
 
     -- Don't enter loop if it's the simple case.
     if str:find("\n") == nil then
-        self:write(string.format([[%s
+        self:print(string.format([[%s
  %s %s
  %s
  %s DO NOT EDIT-- this file is automatically %s.
  %s
+
 ]], comment_start, comment_middle, str, comment_middle, comment_middle, 
             self.tag, comment_end)) 
 
     else
-        self:write(string.format([[%s]], comment_start))
+        self:print(string.format([[%s]], comment_start))
         for line in str:gmatch("[^\n]*") do
             if line ~= nil then
                 self:write(string.format([[
  %s %s]], comment_middle, line))
             end
         end
-        self:write(string.format([[ %s
+        self:print(string.format([[ %s
  %s DO NOT EDIT-- this file is automatically %s
  %s
+
 ]], comment_middle, comment_middle, self.tag, comment_end))
     end
 end

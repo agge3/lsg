@@ -32,7 +32,6 @@ local util = require("util")
 local bsdio = require("bsdio")
 
 -- Globals
-
 local fh = "/dev/null" -- xxx temporary
 
 -- Should be the same as makesyscalls.lua generates, except that we don't bother
@@ -53,6 +52,15 @@ local function alignSysentComment(column)
     end
 end
 
+local function lookupCompatFlag(compat_options, compatlevel)
+    for _, v in pairs(compat_options) do
+        if v.compatlevel == compatlevel then
+            return v.flag
+        end
+    end
+    return nil
+end
+
 local function genInitSysent(tbl, config)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
@@ -66,7 +74,32 @@ local function genInitSysent(tbl, config)
     bio:generated("System call switch table.")
 
 	bio:print(tbl.includes)
-	bio:print("#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))")
+
+    -- Newline after includes and after this line.
+	bio:print("\n#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))\n")
+
+    -- Write out all the compat directives from compat_options
+    -- NOTE: Linux won't have any, so it's skipped as expected.
+    for _, v in pairs(config.compat_options) do
+        bio:print(string.format([[
+
+#ifdef %s
+#define %s(n, name) .sy_narg = n, .sy_call = (sy_call_t *)__CONCAT(%s, name)
+#else
+#define %s(n, name) .sy_narg = 0, .sy_call = (sy_call_t *)nosys
+#endif
+]], v.definition, v.flag:lower(), v.prefix, v.flag:lower()))
+	end
+
+    -- Add a newline only if there were compat_options
+    if config.compat_options ~= nil then
+        bio:print("\n")
+    end
+
+    bio:print(string.format([[
+/* The casts are bogus but will do for now. */
+struct sysent %s[] = {
+]], config.switchname))
 
     -- Keep track of columns to align sysent comment.
     local column
@@ -78,9 +111,10 @@ local function genInitSysent(tbl, config)
         end
 
         -- xxx temporary
-        if v.alias == nil then
-            v.alias = "broken alias"
-        end
+        --bio:print("\n" .. v:symbol() .. "\n")
+        --if v.alias == nil then
+        --    v.alias = "broken alias"
+        --end
 
         -- xxx argssize - seems like this could be made reusable, where to put?
         local argssize
@@ -90,104 +124,102 @@ local function genInitSysent(tbl, config)
             argssize = "0"
         end
 
-        -- Handle non-compatability. 
-
-        -- Handle SYSMUX flag.
-        if v.type.SYSMUX then
-	        bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
-                argssize))
-            column = 8 + 2 + #argssize + 15
-	    	bio:print(string.format(
-	    	    "nosys, .sy_auevent = AUE_NULL, " ..
-	    	    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
-	    	    v.cap))
-            column = column + #"nosys" + #"AUE_NULL" + 3
-            -- xxx better organize this repeat line
-            alignSysentComment(column)
-            bio:print(string.format("/* %d = %s */\n",
-	            v.num, v.alias))
-
-        -- Handle NOSTD flag. 
-        elseif v.type.NOSTD then
-            -- xxx better organize this repeat line
-	        bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
-                argssize))
-            column = 8 + 2 + #argssize + 15
-	    	bio:print(string.format(
-	    	    "lkmressys, .sy_auevent = AUE_NULL, " ..
-	    	    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
-	    	    v.cap))
-		    column = column + #"lkmressys" + #"AUE_NULL" + 3
-            alignSysentComment(column)
-            -- xxx better organize this repeat line
-            bio:print(string.format("/* %d = %s */\n",
-	            v.num, v.alias))
-
-        -- Handle rest of non-compatability.
-        elseif v.type.STD or
-               v.type.NODEF or
-               v.type.NOARGS or
-               v.type.NOPROTO then
-            -- xxx better organize this repeat line
-	        bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
-                argssize))
-            column = 8 + 2 + #argssize + 15
-
-            -- xxx not sure these find call will work
-	    	if v.name == "nosys" or 
-               v.name == "lkmnosys" or
-               v.name == "sysarch" or
-               v.name:find("^freebsd") or
-	    	   v.name:find("^linux") then
-	    	    bio:print(string.format("%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
-	    		    v.name, v.audit, v.cap, v.thr))
-                column = column + #v.name + #v.audit + #v.cap + 3
-	    	else
-	    		bio:print(string.format("sys_%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
-	    		    v.name, v.audit, v.cap, v.thr))
-                column = column + #v.name + #v.audit + #v.cap + 7
-	    	end
-            
-            alignSysentComment(column)
-            -- xxx better organize this repeat line
-            bio:print(string.format("/* %d = %s */\n",
-	            v.num, v.alias))
-
-        -- Handle compatability.
-        elseif c >= 7 then
-            -- xxx needs further attention on sorting
-            if v.type.NOSTD then
+        -- Handle native (non-compatibility):
+        -- NOTE: If the system call's name matches its symbol then it's a native
+        -- system call.
+        if v.name == v:symbol() then
+            -- Handle SYSMUX flag.
+            -- xxx this all needs to be organized better, but mocking up right now
+            if v.type.SYSMUX then
+	            bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
+                    argssize))
+                column = 8 + 2 + #argssize + 15
 	        	bio:print(string.format(
-	        	    "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)%s, " ..
-	        	    ".sy_auevent = %s, .sy_flags = 0, " ..
-	        	    ".sy_thrcnt = SY_THR_ABSENT },",
-	        	    "0", "lkmressys", "AUE_NULL"))
-	        else
-                -- xxx wrap
-                local wrap = ""
+	        	    "nosys, .sy_auevent = AUE_NULL, " ..
+	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
+	        	    v.cap))
+                column = column + #"nosys" + #"AUE_NULL" + 3
+                -- xxx better organize this repeat line
+                alignSysentComment(column)
+                bio:print(string.format("/* %d = %s */\n",
+	                v.num, v.alias))
+            -- Handle NOSTD flag. 
+            elseif v.type.NOSTD then
+                -- xxx better organize this repeat line
+	            bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
+                    argssize))
+                column = 8 + 2 + #argssize + 15
 	        	bio:print(string.format(
-	        	    "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
-	        	    wrap, argssize, v.name, v.audit, v.cap, v.thr))
-	        end
+	        	    "lkmressys, .sy_auevent = AUE_NULL, " ..
+	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
+	        	    v.cap))
+		        column = column + #"lkmressys" + #"AUE_NULL" + 3
+                alignSysentComment(column)
+                -- xxx better organize this repeat line
+                bio:print(string.format("/* %d = %s */\n",
+	                v.num, v.alias))
+            -- Handle rest of non-compatability.
+            -- XXX everything is looking reasonably well. NOT handling args 
+            -- correctly.
+            elseif v.type.STD or
+                   v.type.NODEF or
+                   v.type.NOARGS or
+                   v.type.NOPROTO then
+                -- xxx better organize this repeat line
+	            bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
+                    argssize))
+                column = 8 + 2 + #argssize + 15
 
-            -- xxx descr
+                -- xxx not sure these find call will work
+	        	if v.name == "nosys" or 
+                   v.name == "lkmnosys" or
+                   v.name == "sysarch" or
+                   v.name:find("^freebsd") or
+	        	   v.name:find("^linux") then
+	        	    bio:print(string.format("%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	        		    v:symbol(), v.audit, v.cap, v.thr))
+                    column = column + #v.name + #v.audit + #v.cap + 3
+	        	else
+	        		bio:print(string.format("sys_%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	        		    v:symbol(), v.audit, v.cap, v.thr))
+                    column = column + #v.name + #v.audit + #v.cap + 7
+	        	end
+                
+                alignSysentComment(column)
+                -- xxx better organize this repeat line
+                bio:print(string.format("/* %d = %s */\n",
+	                v.num, v.alias))
+                else
+                    -- assume something went wrong
+                    util.abort(1, "Unable to generate system switch table entry for system call: " .. v.name)
+                end
+
+        -- Handle compatibility (everything >= FREEBSD3):
+        elseif c >= 3 then
+            local flag = lookupCompatFlag(config.compat_options, c)
+            -- Flag is uppercase by default.
+            flag = flag:lower()
             local descr = ""
-            bio:print(string.format("/* %d = %s %s */\n",
-	            v.num, descr, v.alias))
+            if v.type.NOSTD then
+                bio:print(string.format(
+	    	        "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)%s, " ..
+	    	        ".sy_auevent = %s, .sy_flags = 0, " ..
+	    	        ".sy_thrcnt = SY_THR_ABSENT },",
+	    	        "0", "lkmressys", "AUE_NULL"))
+	    	    alignSysentComment(8 + 2 + #"0" + 15 + #"lkmressys" +
+	    	        #"AUE_NULL" + 3)
+	        else
+	    	    bio:print(string.format(
+	    	        "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	    	        flag, argssize, v:symbol(), v.audit, v.cap, v.thr))
+	    	    alignSysentComment(8 + 9 + #argssize + 1 + #v:symbol() +
+	    	    #v.audit + #v.cap + 4)
+            end
+            -- Written for each entry.
+	        bio:print(string.format("/* %d = %s %s */\n", 
+                v.num, descr, v.alias))
 
-        -- Handle different compatability options.
-        elseif c >= 0 then
-        -- xxx needs attention!
-           	local s
-			if c == 0 then
-				s = "obsolete"
-			elseif c == 3 then
-				s = "old"
-			else
-				s = "freebsd" .. c
-			end 
-        
-        -- Handle obsolete.
+        -- Handle obsolete:
         elseif v.type.OBSOL then
 	        bio:print(
 	            "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
@@ -196,30 +228,29 @@ local function genInitSysent(tbl, config)
             local comment = ""
             bio:print(string.format("/* %d = obsolete %s */\n",
 	            v.num, comment))
-
-        -- Handle reserved.
-        elseif v.type.RESERVED then
-        -- xxx reserved goes here
-
-        -- Handle unimplemented.
+        
+        -- Handle unimplemented:
+        -- xxx make sure there's no skipped syscalls and range is correct
         elseif v.type.UNIMP then
+            local unimp = "" -- xxx not seeing where there is right now
+		    bio:print(string.format(
+		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
+		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
+		        ".sy_thrcnt = SY_THR_ABSENT },\t\t\t/* %d = %s */\n",
+		        v.num, unimp))
+
+        -- Handle reserved:
+        -- xxx make sure there's no skipped syscalls and range is correct
+        elseif v.type.RESERVED then
+            local reserved = "reserved for local use"
+            bio:print(string.format(
+		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
+		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
+		        ".sy_thrcnt = SY_THR_ABSENT },\t\t\t/* %d = %s */\n",
+		        v.num, reserved))
+
         -- XXX have range available
-        -- xxx this likely will be done in freebsd-syscall
-	        --if sysstart == nil and sysend == nil then
-	        --	sysstart = tonumber(sysnum)
-	        --	sysend = tonumber(sysnum)
-	        --end
-
-	        --sysnum = sysstart
-	        --while sysnum <= sysend do
-	        --	bio:print(string.format(
-	        --	    "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
-	        --	    ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
-	        --	    ".sy_thrcnt = SY_THR_ABSENT },\t\t\t/* %d = %s */\n",
-	        --	    v.num, v.comment))
-	        --	sysnum = sysnum + 1
-	        --end
-
+            
         else -- do nothing
         end
     end
@@ -237,34 +268,10 @@ end
 local sysfile, configfile = arg[1], arg[2]
 
 config.merge(configfile)
+config.mergeCompat()
 config.mergeCapability()
-
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 
 genInitSysent(tbl, config)
-
-
--- xxx THINGS THAT STILL NEED ATTENTION:	
--- xxx compat_options doesn't exist yet
---    for _, v in pairs(tbl.compat_options) do
---		if v.count > 0 then
---			bio:print(string.format([[
---
---#ifdef %s
---#define %s(n, name) .sy_narg = n, .sy_call = (sy_call_t *)__CONCAT(%s, name)
---#else
---#define %s(n, name) .sy_narg = 0, .sy_call = (sy_call_t *)nosys
---#endif
---]], v.definition, v.flag:lower(), v.prefix, v.flag:lower()))
---		end
---	end
---
---	bio:print(string.format([[
---
---/* The casts are bogus but will do for now. */
---struct sysent %s[] = {
---]], config.switchname))
---
---    bio:print(tbl.defines)

@@ -43,8 +43,8 @@ function FreeBSDSyscall:processCompat()
 		--v.tmp = tmpname
 		--v.dcltmp = dcltmpname
 
-		-- Add compat option to config.known_flags
-	    table.insert(config.known_flags, v.flag)
+		-- Add compat option to syscall.known_flags
+	    table.insert(syscall.known_flags, v.flag)
 
 		-- xxx decide if this way of the doing it is necessary
 		v.count = 0
