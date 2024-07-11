@@ -132,4 +132,58 @@ function util.stripAbiPrefix(funcname, abiprefix)
 	return stripped_name
 end
 
+-- CREDIT: http://lua-users.org/wiki/CopyTable
+function util.shallowcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in pairs(orig) do
+            copy[orig_key] = orig_value
+        end
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
+-- CREDIT: http://lua-users.org/wiki/CopyTable
+function util.deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[util.deepcopy(orig_key)] = util.deepcopy(orig_value)
+        end
+        setmetatable(copy, util.deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
+-- CREDIT: http://lua-users.org/wiki/CopyTable
+-- Save copied tables in `copies`, indexed by original table.
+function util.deepcopy(orig, copies)
+    copies = copies or {}
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        if copies[orig] then
+            copy = copies[orig]
+        else
+            copy = {}
+            copies[orig] = copy
+            for orig_key, orig_value in next, orig, nil do
+                copy[util.deepcopy(orig_key, copies)] = util.deepcopy(orig_value, copies)
+            end
+            setmetatable(copy, util.deepcopy(getmetatable(orig), copies))
+        end
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 return util

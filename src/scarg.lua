@@ -15,6 +15,7 @@
 
 local config = require("config")
 local util = require("util")
+require("test/dump")
 
 local scarg = {}
 
@@ -131,6 +132,32 @@ end
 -- NOTE: Appends to the end, "order" is the responsibility of the caller.
 -- RETURN: TRUE if appended, FALSE if not
 --
+function scarg:insert()
+    if config.abiChanges("pair_64bit") and util.is64bitType(self.type) then
+        self:pad(tbl)
+    	table.insert(self.arg, {
+    		type = "uint32_t",
+    		name = self.name .. "1",
+    	})
+    	table.insert(self.arg, {
+    		type = "uint32_t",
+    		name = self.name .. "2",
+    	})
+    else
+    	table.insert(self.arg, {
+    		type = self.type,
+    		name = self.name,
+    	})
+        return self.arg
+    end
+    return self.arg
+end
+
+--
+-- Append to the system call's argument table.
+-- NOTE: Appends to the end, "order" is the responsibility of the caller.
+-- RETURN: TRUE if appended, FALSE if not
+--
 function scarg:append(tbl)
     if config.abiChanges("pair_64bit") and util.is64bitType(self.type) then
         self:pad(tbl)
@@ -153,6 +180,10 @@ function scarg:append(tbl)
 
     return false
 end
+
+function scarg:getArg()
+    return self.arg
+end
         
 -- Default constructor. scarg HAS a finalizer procedure so MAKE SURE to nil the
 -- reference.
@@ -165,6 +196,8 @@ function scarg:new(obj, line)
 	self.abi_changes = false
     self.global_abi_changes = false
 
+    self.arg = {}
+
     obj:init()
         
     -- Setup lua "destructor", to merge the global ABI change flag into the 
@@ -172,7 +205,7 @@ function scarg:new(obj, line)
     -- should be a consistent guarantee.
     local proxy = setmetatable({ }, {
         __gc = function()
-            obj:finalizer()
+            obj:finalize()
         end
     })
     obj.__gcproxy = proxy
@@ -180,7 +213,7 @@ function scarg:new(obj, line)
 	return obj
 end
 
-function scarg:finalizer()
+function scarg:finalize()
     if self.global_changes_abi then
          -- xxx this is what we're intending to do here, right?
         config.changes_abi = self.global_changes_abi

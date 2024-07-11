@@ -8,6 +8,7 @@
 local util = require("util")
 local scarg = require("scarg") -- xxx was this global for a reason?
 local scret = require("scret")
+require("test/dump")
 
 local syscall = {}
 
@@ -209,6 +210,7 @@ function syscall:addDef(line, words)
 	    self.altname = words[5] -- xxx set alias here's it an alt alias
 	    self.alttag = words[6]
 	    self.altrtyp = words[7]
+        --print(self.name)
 	    return self.name == "{"
     end
     return false
@@ -256,8 +258,9 @@ function syscall:addArgs(line)
         -- if arg processes, then add. if not, don't add
         if arg:process() then 
             arg:append(self.args)
+            --dump(self.args)
         end
-        arg = nil -- nil the reference to trigger the finalizer
+        --arg = nil -- nil the reference to trigger the finalizer
         return true
     end
     return false
@@ -317,6 +320,8 @@ function syscall:finalize()
     else
         self.arg_alias = "IM BREAKING HERE"
     end
+
+    --dump(self.args)
 end
 
 --
@@ -341,6 +346,7 @@ function syscall:add(line)
     if self:addArgs(line) then
         return false -- arguments added, keep going
     end
+    --dump(self.args)
     return self:isAdded(line) -- final validation, before adding
 end
 
@@ -396,7 +402,10 @@ function syscall:iter()
 		return function ()
 			if s == e then
 				s = e + 1
-				return self
+                -- In the case that it's not a range, we want a deep copy for 
+                -- the nested arguments table.
+                local deep_copy = util.deepcopy(self)
+                return deep_copy
 			end
 		end
 	end
