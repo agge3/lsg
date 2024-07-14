@@ -44,9 +44,37 @@ function bsdio:pad64(bool)
     end
 end
 
+
 -- Returns the generated tag. Useful if only the tag is needed.
 function bsdio:tag()
     return self.tag
+end
+
+bsdio.cache_levels = {}
+
+-- Cache lines for later writing. Can also specify which order (level) to store
+-- in.
+-- Useful when a file has multiple stages of generation.
+function bsdio:cache(str, level)
+    level = level or 1  -- Default to stage 1 if not provided
+    self.cache_levels[level] = self.cache_levels[level] or {}
+    table.insert(self.cache_levels[level], str)
+end
+
+-- Write the entire cache; lines are in the order they were inserted and levels 
+-- are in the order they were specified.
+function bsdio:writeCache()
+    if next(self.cache_stages) == nil then
+        --util.abort(1, "No cache to write")
+        -- do nothing
+    else
+        for level, lines in ipairs(self.cache_levels) do
+            for _, line in ipairs(lines) do
+                -- xxx change to write when done
+                bsdio:print(line)
+            end
+        end
+    end
 end
 
 --

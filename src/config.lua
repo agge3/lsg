@@ -306,4 +306,11 @@ function config.mergeCapability()
     end
 end
 
+config.cleantmp = true
+--local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
+config.tmpspace = "tmp/"
+
+-- Opened files
+config.files = {}
+
 return config

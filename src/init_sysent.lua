@@ -62,14 +62,6 @@ local function lookupCompatFlag(compat_options, compatlevel)
     return nil
 end
 
-local function processArgsize(syscall)
-    if #syscall.args ~= 0 or syscall.type.NODEF then
-        return "AS(" .. syscall.arg_alias .. ")"
-    end
-
-    return "0"
-end
-
 local function genInitSysent(tbl, config)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
@@ -121,7 +113,7 @@ struct sysent %s[] = {
 
         --dump(v.args)
 
-        local argssize = processArgsize(v)
+        local argssize = util.processArgsize(v)
         local comment = v.alias
 
         -- Handle native (non-compatibility):

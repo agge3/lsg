@@ -70,6 +70,112 @@ systrace_args(int sysnum, void *params, uint64_t *uarg, int *n_args)
     -- pad64() is an io macro that will pad based on the result of 
     -- abi_changes().
     bio:pad64(config.abi_changes("pair_64bit")) 
+
+    for k, v in pairs(s) do
+    local c = v:compat_level()
+    if v.num > max then
+        max = v.num
+    end
+
+    argssize = util.processArgsize(v)
+
+    -- Handle non-compatability.
+    if v.name == v:symbol() then
+
+	    bio:print(string.format([[
+	/* %s */
+	case %d: {
+]], v.name, v.num))
+	    bio:print(string.format([[
+	/* %s */
+	case %d:
+]], v.name, v.num))
+	    bio:print(string.format([[
+	/* %s */
+	case %d:
+]], v.name, v.num))
+
+        local n_args = #v.args
+
+        if #v.args ~= nil and v.type.SYSMUX then
+            n_args = 0
+            
+		    bio:print("\t\tswitch (ndx) {\n")
+		    bio:print(string.format(
+		        "\t\tstruct %s *p = params;\n", v.arg_alias))
+
+            for idx, arg in ipairs(v.args) do
+			argtype = arg.type
+			argname = arg.name
+
+			argtype = trim(argtype:gsub("__restrict$", ""), nil)
+			if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
+				bio:print("#ifdef PAD64_REQUIRED\n")
+			end
+
+			-- Pointer arg?
+			if argtype:find("*") then
+				desc = "userland " .. argtype
+			else
+				desc = argtype;
+			end
+
+			bio:print(string.format(
+			    "\t\tcase %d%s:\n\t\t\tp = \"%s\";\n\t\t\tbreak;\n",
+			    idx - 1, padding, desc))
+
+			if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
+				padding = " - _P_"
+				bio:print("#define _P_ 0\n#else\n#define _P_ 1\n#endif\n")
+			end
+
+			if util.isptrtype(argtype) then
+				bio:print(string.format(
+				    "\t\tuarg[a++] = (%s)p->%s; /* %s */\n",
+				    config.ptr_intptr_t_cast,
+				    argname, argtype))
+
+			elseif argtype == "union l_semun" then
+				bio:print(string.format(
+				    "\t\tuarg[a++] = p->%s.buf; /* %s */\n",
+				    argname, argtype))
+
+			elseif argtype:sub(1,1) == "u" or argtype == "size_t" then
+				bio:print(string.format(
+				    "\t\tuarg[a++] = p->%s; /* %s */\n",
+				    argname, argtype))
+
+			else
+				if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
+					bio:print("#ifdef PAD64_REQUIRED\n")
+				end
+				bio:print(string.format(
+				    "\t\tiarg[a++] = p->%s; /* %s */\n",
+				    argname, argtype))
+				if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
+					bio:print("#endif\n")
+				end
+            end
+
+		bio:print("\t\tdefault:\n\t\t\tbreak;\n\t\t};\n")
+
+		if padding ~= "" then
+			bio:print("#undef _P_\n\n")
+		end
+
+		bio:print(string.format([[
+		if (ndx == 0 || ndx == 1)
+			p = "%s";
+		break;
+]], v.ret))
+
+        end
+
+	bio:print(string.format(
+	    "\t\t*n_args = %d;\n\t\tbreak;\n\t}\n", n_args))
+	bio:print("\t\tbreak;\n")
+
+    end
 end
 
 -- Entry

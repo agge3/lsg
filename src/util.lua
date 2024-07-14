@@ -132,6 +132,40 @@ function util.stripAbiPrefix(funcname, abiprefix)
 	return stripped_name
 end
 
+function util.processArgsize(syscall)
+    if #syscall.args ~= 0 or syscall.type.NODEF then
+        return "AS(" .. syscall.arg_alias .. ")"
+    end
+
+    return "0"
+end
+
+function util.cleanup()
+	--for _, v in pairs(files) do
+	--	assert(v:close())
+	--end
+
+	if config.cleantmp then
+		if lfs.dir(config.tmpspace) then
+			for fname in lfs.dir(tmpspace) do
+				if fname ~= "." and fname ~= ".." then
+					assert(os.remove(config.tmpspace .. "/" ..
+					    fname))
+				end
+			end
+		end
+
+		if lfs.attributes(config.tmpspace) and not lfs.rmdir(config.tmpspace) then
+			assert(io.stderr:write("Failed to clean up tmpdir: " ..
+			    config.tmpspace .. "\n"))
+		end
+	else
+		assert(io.stderr:write("Temp files left in " .. config.tmpspace ..
+		    "\n"))
+	end
+end
+
+
 -- CREDIT: http://lua-users.org/wiki/CopyTable
 function util.shallowcopy(orig)
     local orig_type = type(orig)
