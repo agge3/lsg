@@ -30,6 +30,7 @@ local FreeBSDSyscall = require("freebsd-syscall")
 local config = require("config")    -- Common config file mgt
 local util = require("util")
 local bsdio = require("bsdio")
+require("test/dump")
 
 -- Globals
 
@@ -37,6 +38,16 @@ local fh = "/dev/null"
 
 local sysproto = "" .. ".h"
 local sysproto_h = "" .. "_SYSPROTO_H_"
+
+
+local function lookupCompatFlag(compat_options, compatlevel)
+    for _, v in pairs(compat_options) do
+        if v.compatlevel == compatlevel then
+            return v.flag
+        end
+    end
+    return nil
+end
 
 -- xxx tricky generation here, a lot of pieces in different places at different 
 -- times
@@ -94,13 +105,36 @@ struct thread;
     -- abi_changes().
     bio:pad64(config.abiChanges("pair_64bit"))
 
+    -- Make a local copy of global compat options, write lines are going to be 
+    -- stored in it. There's a lot of specific compat handling for sysproto.h
+    local compat_options = config.compat_options
+
+    -- Write out all the compat directives from compat_options
+    -- NOTE: Linux won't have any, so it's skipped as expected.
+    for _, v in pairs(config.compat_options) do
+        -- 
+        -- NOTE: Storing each compat entry requires storing multiple levels of 
+        -- file generation; compat entries are given ranges of 10 instead to 
+        -- cope with this.
+        -- EXAMPLE: 13 is indexed as 130, 131 is the second generation level of 
+        -- 13
+        --
+        -- Tag an extra newline to the end, so it doesn't have to be worried 
+        -- about later.
+        bio:store(string.format("\n#ifdef %s\n\n", v.definition), v.compatlevel * 10)
+        print("First loop: " .. v.compatlevel)
+	end
+
     for k, v in pairs(s) do
         local c = v:compat_level()
         if v.num > max then
             max = v.num
         end
 
-        -- Output at different 
+        -- Audit defines are stored at an arbitrarily large number so that 
+        -- they're always at the last storage level; to allow compat entries to 
+        -- be indexed more intuitively (by their compat level).
+        local audit_idx = 0xffffffff -- this should do
 
         -- Handle non-compatability.
         if v.name == v:symbol() then
@@ -111,7 +145,7 @@ struct thread;
                not v.type.NOPROTO and
                not v.type.NODEF then
 
-                if #v.args > 0 then
+                if v.args ~= nil then
                     -- fh = sysarg
                     bio:print(string.format("struct %s {\n",
 		    	        v.arg_alias))
@@ -143,7 +177,7 @@ struct thread;
                 end
 
             -- Same thing, except no arguments.
-            else if not v.type.NOPROTO and
+            elseif not v.type.NOPROTO and
                     not v.type.NODEF then
 
                 local sys_prefix = "sys_"
@@ -154,52 +188,70 @@ struct thread;
                     sys_prefix = ""
                 end
 
-                -- fh = sysdcl
-                bio:print(string.format(
+                bio:store(string.format(
                     "%s\t%s%s(struct thread *, struct %s *);\n",
-		            v.rettype, v.prefix, v.name, v.alias))
-                -- fh = sysaue
-		        bio:cache(string.format("#define\t%sAUE_%s\t%s\n",
-		            config.syscallprefix, v.alias, v.audit), 1) 
+		            v.rettype, v.prefix, v.name, v.alias), 1)
 
+                -- Audit defines are stored at an arbitrarily large number so 
+                -- that they're always at the end; to allow compat entries to 
+                -- just be indexed by their compat level.
+		        bio:store(string.format("#define\t%sAUE_%s\t%s\n",
+		            config.syscallprefix, v.alias, v.audit), audit_idx) 
+
+            -- Handle reached end of native.
+            elseif max >= v.num then
+                -- nothing for now
             else
-                -- all cases covered
+                -- all cases covered, do nothing
             end
         -- noncompat done
-        end
                 
-        -- Handle compatibility (everything >= FREEBSD3):
+        --
+        -- Handle compatibility (everything >= FREEBSD3)
+        -- Because of the way sysproto.h is printed, lines are stored by their 
+        -- compat level, then written in the expected order later.
+        --
+        -- NOTE: Storing each compat entry requires storing multiple levels of 
+        -- file generation; compat entries are given ranges of 10 instead to 
+        -- cope with this.
+        -- EXAMPLE: 13 is indexed as 130, 131 is the second generation level of 
+        -- 13
+        -- 
         elseif c >= 3 then
-
+            local idx = c * 10
+            --print(idx)
+            --print(idx)
+            --print(idx)
+            --print(idx)
+            --print(idx)
+            --print(idx)
             if not v.type.NOPROTO and
                not v.type.NODEF and
                not v.type.NOARGS then
-
-                if #v.args > 0 then
-                    for _, v in ipairs(v.args) do
-                        -- xxx out
-		                bio:print(string.format(
+                if v.args ~= nil then
+                    bio:store(string.format("struct %s {\n", v.arg_alias), idx)
+                    for _, arg in ipairs(v.args) do
+		                bio:store(string.format(
 		                    "\tchar %s_l_[PADL_(%s)]; %s %s; char %s_r_[PADR_(%s)];\n",
-		                    v.name, v.type,
-		                    v.type, v.name,
-		                    v.name, v.type))
+		                    arg.name, arg.type,
+		                    arg.type, arg.name,
+		                    arg.name, arg.type), idx)
 		             end
-		             bio:print("};\n")
+		             bio:store("};\n", idx)
                 else 
-                     bio:print(string.format(
-		                 "struct %s {\n\tsyscallarg_t dummy;\n};\n", v.arg_alias))
+                     bio:store(string.format(
+		                 "struct %s {\n\tsyscallarg_t dummy;\n};\n", v.arg_alias), idx)
                 end
-
             end
 
             if not v.type.NOPROTO and
                not v.type.NODEF then 
-		        bio:print(string.format(
+		        bio:store(string.format(
 		            "%s\t%s%s(struct thread *, struct %s *);\n",
-		            v.ret, v.prefix, v.name, v.arg_alias))
-		        bio:cache(string.format(
+		            v.rettype, v.prefix, v:symbol(), v.arg_alias), idx + 1)
+		        bio:store(string.format(
 		            "#define\t%sAUE_%s%s\t%s\n", config.syscallprefix,
-		            v.prefix, v.name, v.audit), 1)
+		            v.prefix, v:symbol(), v.audit), audit_idx)
             end
         
         -- Handle obsolete, unimplemented, and reserved -- do nothing
@@ -207,6 +259,19 @@ struct thread;
             -- do nothing
         end
     end
+
+    -- Append #endif to each compat option.
+    for _, v in pairs(config.compat_options) do
+        -- If compat entries are indexed by 10s, then 9 will always be the end 
+        -- of that compat entry.
+        local end_idx = (v.compatlevel * 10) + 9
+        bio:store(string.format("\n#endif /* %s */\n", v.definition), end_idx)
+	end
+
+    if bio.storage_levels ~= nil then
+        bio:writeStorage()
+    end
+
 end
 
 -- Entry
@@ -218,6 +283,8 @@ end
 local sysfile, configfile = arg[1], arg[2]
 
 config.merge(configfile)
+config.mergeCompat()
+config.mergeCapability()
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}

@@ -240,7 +240,7 @@ struct sysent %s[] = {
     end
 
     -- End
-    print("};")
+    bio:print("};")
 end
 
 -- Entry

@@ -50,26 +50,23 @@ function bsdio:tag()
     return self.tag
 end
 
-bsdio.cache_levels = {}
+bsdio.storage_levels = {}
 
--- Cache lines for later writing. Can also specify which order (level) to store
+-- Store lines for later writing. Can also specify which order (level) to store
 -- in.
 -- Useful when a file has multiple stages of generation.
-function bsdio:cache(str, level)
-    level = level or 1  -- Default to stage 1 if not provided
-    self.cache_levels[level] = self.cache_levels[level] or {}
-    table.insert(self.cache_levels[level], str)
+function bsdio:store(str, level)
+    level = level or 1 -- default to level one if not provided
+    self.storage_levels[level] = self.storage_levels[level] or {}
+    table.insert(self.storage_levels[level], str)
 end
 
--- Write the entire cache; lines are in the order they were inserted and levels 
--- are in the order they were specified.
-function bsdio:writeCache()
-    if next(self.cache_stages) == nil then
-        --util.abort(1, "No cache to write")
-        -- do nothing
-    else
-        for level, lines in ipairs(self.cache_levels) do
-            for _, line in ipairs(lines) do
+-- Write all storage; lines are in the order they were inserted and levels are 
+-- in the order they were specified.
+function bsdio:writeStorage()
+    if self.storage_levels ~= nil then
+        for k, v in util.ipairs_sparse(self.storage_levels) do
+            for _, line in ipairs(v) do
                 -- xxx change to write when done
                 bsdio:print(line)
             end
@@ -108,7 +105,7 @@ function bsdio:generated(str, comment)
         self:print(string.format([[%s]], comment_start))
         for line in str:gmatch("[^\n]*") do
             if line ~= nil then
-                self:write(string.format([[
+                self:print(string.format([[
  %s %s]], comment_middle, line))
             end
         end

@@ -41,13 +41,14 @@ local cfg = {
     ptr_intptr_t_cast = "intptr_t" -- xxx will be needed here
 }
 
-local cfg_mod = {
+local function genSystraceArgs(tbl, config)
+    -- Grab the master syscalls table, and prepare bookkeeping for the max
+    -- syscall number.
+    local s = tbl.syscalls
+    local max = 0
 
-}
-
-local function genSystraceArgs(tbl, cfg)
     -- Init the bsdio object, has macros and procedures for LSG specific io.
-    local bio = bsdio:new({ }, fh) 
+    local bio = bsdio:new({}, fh) 
 
     -- generated() will be able to handle the newline here.
     -- NOTE: This results in a different output than makesyscalls.lua 
@@ -56,126 +57,156 @@ local function genSystraceArgs(tbl, cfg)
         This file is part of the DTrace syscall provider.
     ]])
 
-    -- tag() will provide that generated tag if it is needed separate from 
-    -- generated()
-    bio:write(string.format([[
+    bio:print(string.format([[
 static void
 systrace_args(int sysnum, void *params, uint64_t *uarg, int *n_args)
 {
 	int64_t *iarg = (int64_t *)uarg;
 	int a = 0;
 	switch (sysnum) {
-]], bio:tag)) 
+]]))
+    
+    bio:store(string.format([[
+static void
+systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
+{
+	const char *p = NULL;
+	switch (sysnum) {
+]]), 1)
+
+    bio:store(string.format([[
+static void
+systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
+{
+	const char *p = NULL;
+	switch (sysnum) {
+]]), 2)
 
     -- pad64() is an io macro that will pad based on the result of 
     -- abi_changes().
-    bio:pad64(config.abi_changes("pair_64bit")) 
+    bio:pad64(config.abiChanges("pair_64bit")) 
 
     for k, v in pairs(s) do
-    local c = v:compat_level()
-    if v.num > max then
-        max = v.num
-    end
+        local c = v:compat_level()
+        if v.num > max then
+            max = v.num
+        end
 
-    argssize = util.processArgsize(v)
+        argssize = util.processArgsize(v)
 
-    -- Handle non-compatability.
-    if v.name == v:symbol() then
+        -- Handle non-compatability.
+        if v.name == v:symbol() then
 
-	    bio:print(string.format([[
+	        bio:print(string.format([[
 	/* %s */
 	case %d: {
 ]], v.name, v.num))
-	    bio:print(string.format([[
+	        bio:store(string.format([[
 	/* %s */
 	case %d:
-]], v.name, v.num))
-	    bio:print(string.format([[
+]], v.name, v.num), 1)
+	        bio:store(string.format([[
 	/* %s */
 	case %d:
-]], v.name, v.num))
+]], v.name, v.num), 2)
 
         local n_args = #v.args
 
-        if #v.args ~= nil and v.type.SYSMUX then
-            n_args = 0
-            
-		    bio:print("\t\tswitch (ndx) {\n")
-		    bio:print(string.format(
-		        "\t\tstruct %s *p = params;\n", v.arg_alias))
+            if v.args ~= nil and not v.type.SYSMUX then
+                padding = ""
+                n_args = 0
+                
+		        bio:print(string.format(
+		            "\t\tstruct %s *p = params;\n", v.arg_alias))
+		        bio:store("\t\tswitch (ndx) {\n", 1)
 
-            for idx, arg in ipairs(v.args) do
-			argtype = arg.type
-			argname = arg.name
+                for idx, arg in ipairs(v.args) do
+		    	    argtype = arg.type
+		    	    argname = arg.name
 
-			argtype = trim(argtype:gsub("__restrict$", ""), nil)
-			if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
-				bio:print("#ifdef PAD64_REQUIRED\n")
-			end
+		    	    argtype = util.trim(argtype:gsub("__restrict$", ""), nil)
+		    	    if argtype == "int" and argname == "_pad" and 
+                       config.abiChanges("pair_64bit") then
+		    	    	bio:store("#ifdef PAD64_REQUIRED\n", 1)
+		    	    end
 
-			-- Pointer arg?
-			if argtype:find("*") then
-				desc = "userland " .. argtype
-			else
-				desc = argtype;
-			end
+		    	    -- Pointer arg?
+		    	    if argtype:find("*") then
+		    	    	desc = "userland " .. argtype
+		    	    else
+		    	    	desc = argtype;
+		    	    end
 
-			bio:print(string.format(
-			    "\t\tcase %d%s:\n\t\t\tp = \"%s\";\n\t\t\tbreak;\n",
-			    idx - 1, padding, desc))
+		    	    bio:store(string.format(
+		    	        "\t\tcase %d%s:\n\t\t\tp = \"%s\";\n\t\t\tbreak;\n",
+		    	        idx - 1, padding, desc), 1)
 
-			if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
-				padding = " - _P_"
-				bio:print("#define _P_ 0\n#else\n#define _P_ 1\n#endif\n")
-			end
+		    	    if argtype == "int" and argname == "_pad" and 
+                       config.abiChanges("pair_64bit") then
+		    	    	padding = " - _P_"
+		    	    	bio:store("#define _P_ 0\n#else\n#define _P_ 1\n#endif\n", 1)
+		    	    end
 
-			if util.isptrtype(argtype) then
-				bio:print(string.format(
-				    "\t\tuarg[a++] = (%s)p->%s; /* %s */\n",
-				    config.ptr_intptr_t_cast,
-				    argname, argtype))
+		    	    if util.isPtrType(argtype) then
+		    	    	bio:print(string.format(
+		    	    	    "\t\tuarg[a++] = (%s)p->%s; /* %s */\n",
+		    	    	    config.ptr_intptr_t_cast,
+		    	    	    argname, argtype))
 
-			elseif argtype == "union l_semun" then
-				bio:print(string.format(
-				    "\t\tuarg[a++] = p->%s.buf; /* %s */\n",
-				    argname, argtype))
+		    	    elseif argtype == "union l_semun" then
+		    	    	bio:print(string.format(
+		    	    	    "\t\tuarg[a++] = p->%s.buf; /* %s */\n",
+		    	    	    argname, argtype))
 
-			elseif argtype:sub(1,1) == "u" or argtype == "size_t" then
-				bio:print(string.format(
-				    "\t\tuarg[a++] = p->%s; /* %s */\n",
-				    argname, argtype))
+		    	    elseif argtype:sub(1,1) == "u" or argtype == "size_t" then
+		    	    	bio:print(string.format(
+		    	    	    "\t\tuarg[a++] = p->%s; /* %s */\n",
+		    	    	    argname, argtype))
 
-			else
-				if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
-					bio:print("#ifdef PAD64_REQUIRED\n")
-				end
-				bio:print(string.format(
-				    "\t\tiarg[a++] = p->%s; /* %s */\n",
-				    argname, argtype))
-				if argtype == "int" and argname == "_pad" and abi_changes("pair_64bit") then
-					bio:print("#endif\n")
-				end
-            end
+		    	    else
+		    	    	if argtype == "int" and argname == "_pad" and
+                           config.abiChanges("pair_64bit") then
+		    	    		bio:print("#ifdef PAD64_REQUIRED\n")
+		    	    	end
+		    	    	bio:print(string.format(
+		    	    	    "\t\tiarg[a++] = p->%s; /* %s */\n",
+		    	    	    argname, argtype))
+		    	    	if argtype == "int" and argname == "_pad" and 
+                           config.abiChanges("pair_64bit") then
+		    	    		bio:print("#endif\n")
+		    	    	end
+                    end
+                end
 
-		bio:print("\t\tdefault:\n\t\t\tbreak;\n\t\t};\n")
+		        bio:store("\t\tdefault:\n\t\t\tbreak;\n\t\t};\n", 1)
 
-		if padding ~= "" then
-			bio:print("#undef _P_\n\n")
-		end
+		        if padding ~= "" then
+		        	bio:store("#undef _P_\n\n", 1)
+		        end
 
-		bio:print(string.format([[
+                -- xxx error here, mux flag isn't being filtered properly
+		        bio:store(string.format([[
 		if (ndx == 0 || ndx == 1)
 			p = "%s";
 		break;
-]], v.ret))
+]], v.rettype), 2)
+            end
 
+	    bio:print(string.format(
+	        "\t\t*n_args = %d;\n\t\tbreak;\n\t}\n", n_args))
+	    bio:store("\t\tbreak;\n", 1)
+
+        -- Handle compatibility (everything >= FREEBSD3):
+        else
+            -- do nothing, only for native
         end
-
-	bio:print(string.format(
-	    "\t\t*n_args = %d;\n\t\tbreak;\n\t}\n", n_args))
-	bio:print("\t\tbreak;\n")
-
     end
+
+    -- Write all stored lines.
+    if bio.storage_levels ~= nil then
+        bio:writeStorage()
+    end
+
 end
 
 -- Entry
@@ -186,9 +217,7 @@ end
 
 local sysfile, configfile = arg[1], arg[2]
 
-config.mergeGlobal(fh, cfg, cfg_mod)
-
-local cfg_mod = {}
+config.merge(configfile)
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
