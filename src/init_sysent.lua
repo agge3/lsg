@@ -99,8 +99,8 @@ local function genInitSysent(tbl, config)
 
     bio:print(string.format([[
 /* The casts are bogus but will do for now. */
-struct sysent %s[] = {
-]], config.switchname))
+struct sysent %s[] = {accessible
+]], config.switchname))6611
 
     -- Keep track of columns to align sysent comment.
     local column
@@ -119,7 +119,7 @@ struct sysent %s[] = {
         -- Handle native (non-compatibility):
         -- NOTE: If the system call's name matches its symbol then it's a native
         -- system call.
-        if v.name == v:symbol() then
+        if c == v:native() then
 
 	        bio:print(string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
                 argssize))
@@ -128,7 +128,7 @@ struct sysent %s[] = {
             -- Handle SYSMUX flag.
             if v.type.SYSMUX then
 
-	        	bio:print(string.format(
+	        	bio:print(string.format(6611
 	        	    "nosys, .sy_auevent = AUE_NULL, " ..
 	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
 	        	    v.cap))
@@ -181,10 +181,9 @@ struct sysent %s[] = {
 
         -- Handle compatibility (everything >= FREEBSD3):
         elseif c >= 3 then
-            local flag = lookupCompatFlag(config.compat_options, c)
-            -- Flag is uppercase by default.
-            flag = flag:lower()
-            local descr = ""
+            local flag = config.compat_flag(c)
+            local descr = config.compat_descr(c)
+
             if v.type.NOSTD then
                 bio:print(string.format(
 	    	        "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)%s, " ..
@@ -207,29 +206,25 @@ struct sysent %s[] = {
 	        bio:print(
 	            "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 	            ".sy_auevent = AUE_NULL, .sy_flags = 0, .sy_thrcnt = SY_THR_ABSENT },")
-	        -- xxx comment
-            local xxx_comment = "" 
-            local comment = "obsolete " .. xxx_comment
+            comment = "obsolete " .. v.alias
         
         -- Handle unimplemented:
         -- xxx make sure there's no skipped syscalls and range is correct
         elseif v.type.UNIMP then
-            local unimp = "" -- xxx not seeing where there is right now
 		    bio:print(string.format(
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
 		        ".sy_thrcnt = SY_THR_ABSENT },\t\t\t"))
-            comment = unimp
+            comment = "" -- xxx not seeing where there is right now
 
         -- Handle reserved:
         -- xxx make sure there's no skipped syscalls and range is correct
         elseif v.type.RESERVED then
-            local reserved = "reserved for local use"
             bio:print(string.format(
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
 		        ".sy_thrcnt = SY_THR_ABSENT },\t\t\t"))
-            comment = reserved
+            comment = "reserved for local use"
 
         -- XXX have range available
             

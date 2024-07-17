@@ -64,10 +64,11 @@ local function genSyscalls(tbl, config)
             bio:print(string.format("\t\"%s\",\t\t\t/* %d = %s */\n",
 	            v.alias, v.num, v.alias))
 		elseif c >= 3 then
-            -- xxx
-            local wrap, descr = ""
+            local flag = config.compat_flag(c)
+            local descr = config.compat_descr(c)
+
 			bio:print(string.format("\t\"%s.%s\",\t\t/* %d = %s %s */\n",
-	            wrap, v.alias, v.num, descr, v.alias))
+	            flag, v.alias, v.num, descr, v.alias))
 		elseif v.type.RESERVED then
 		    bio:write(string.format(
                 "\t\"obs_%s\",\t\t\t/* %d = obsolete %s */\n",
@@ -96,6 +97,8 @@ end
 local sysfile, configfile = arg[1], arg[2]
 
 config.merge(configfile)
+config.mergeCompat()
+config.mergeCapability()
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}

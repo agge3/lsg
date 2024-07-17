@@ -122,7 +122,6 @@ function syscall:processAbiChanges()
     return true
 end
 
-local native = 1000000
 
 -- Return the symbol name for this system call.
 function syscall:symbol()
@@ -139,10 +138,26 @@ function syscall:symbol()
 	if c == 3 then
 		return "o" .. self.name
 	end
-	if c < native then
+	if c < self.native then
 		return "freebsd" .. tostring(c) .. "_" .. self.name
 	end
 	return self.name
+end
+
+-- Return the comment for this system call.
+function syscall:comment()
+    local c = self:compat_level()
+    if self.type.OBSOL then
+        return "/* obsolete " .. self.alias .. " */"
+    end
+    if self.type.RESERVED then
+        return "/* reserved for local use */"
+    end
+    if self.type.UNIMPL then
+        return "" -- xxx not seeing where there is
+    else
+        return "/* " .. self.num .. " = " .. self.alias .. " */"
+    end
 end
 
 --
@@ -166,7 +181,7 @@ function syscall:compat_level()
 			return tonumber(l)
 		end
 	end
-	return native
+	return self.native
 end
 
 -- xxx
@@ -350,10 +365,19 @@ function syscall:add(line)
     return self:isAdded(line) -- final validation, before adding
 end
 
+-- Return the native constant.
+function syscall:native()
+    return self.native
+end
+
 function syscall:new(obj)
 	obj = obj or { }
 	setmetatable(obj, self)
 	self.__index = self
+
+    -- Native is an arbitrarily large number to have a constant and not 
+    -- interfere with compat numbers.
+    self.native = 1000000
 
 	self.expect_rbrace = false
 	self.args = { }
