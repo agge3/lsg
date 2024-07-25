@@ -37,10 +37,6 @@ local systrace = "" .. "_systrace_args.c"
 
 local fh = "/dev/null" -- xxx temporary
 
-local cfg = {
-    ptr_intptr_t_cast = "intptr_t" -- xxx will be needed here
-}
-
 local function genSystraceArgs(tbl, config)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.

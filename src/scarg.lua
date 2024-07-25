@@ -15,7 +15,6 @@
 
 local config = require("config")
 local util = require("util")
-require("test/dump")
 
 local scarg = {}
 

@@ -17,11 +17,6 @@ local FreeBSDSyscall = {}
 
 FreeBSDSyscall.__index = FreeBSDSyscall
 
--- xxx probably a better place for this
-local function validate()
-end
-
--- xxx still deciding where this should be done at
 -- Processes compatability options in the global config and inserts them into
 -- known_flags to reference.
 function FreeBSDSyscall:processCompat()
@@ -35,19 +30,8 @@ function FreeBSDSyscall:processCompat()
 			v.descr = stdcompat:lower()
 		end
 
-        -- xxx not doing tmp files anymore
-		--local tmpname = "sys" .. v.flag:lower()
-		--local dcltmpname = tmpname .. "dcl"
-		--files[tmpname] = io.tmpfile()
-		--files[dcltmpname] = io.tmpfile()
-		--v.tmp = tmpname
-		--v.dcltmp = dcltmpname
-
 		-- Add compat option to syscall.known_flags
 	    table.insert(syscall.known_flags, v.flag)
-
-		-- xxx decide if this way of the doing it is necessary
-		v.count = 0
 	end
 end
 
@@ -55,6 +39,10 @@ function FreeBSDSyscall:parseSysfile()
 	local file = self.sysfile
 	local config = self.config
 	local commentExpr = "^%s*;.*"
+
+    -- Keep track of the system call numbers and make sure there's no skipped 
+    -- system calls.
+    local num = 0
 
 	if file == nil then
 		print "No file"
@@ -73,9 +61,9 @@ function FreeBSDSyscall:parseSysfile()
 	local defs = ""
 	local s
 	for line in fh:lines() do
-		line = line:gsub(commentExpr, "")		-- Strip any comments
+		line = line:gsub(commentExpr, "") -- Strip any comments
 
-		-- Note can't use pure pattern matching here because of the 's' test
+		-- NOTE: Can't use pure pattern matching here because of the 's' test
 		-- and this is shorter than a generic pattern matching pattern
 		if line == nil or line == "" then
 			-- nothing blank line or end of file
@@ -116,8 +104,6 @@ function FreeBSDSyscall:parseSysfile()
 
     -- special handling for linux nosys
     if config.syscallprefix:find("LINUX") ~= nil then
-        -- xxx do more here? want to discuss, looks like we're currently 
-        -- skipping?
         s = nil
     end
 

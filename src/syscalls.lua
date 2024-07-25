@@ -64,8 +64,14 @@ local function genSyscalls(tbl, config)
             bio:print(string.format("\t\"%s\",\t\t\t/* %d = %s */\n",
 	            v.alias, v.num, v.alias))
 		elseif c >= 3 then
-            local flag = config.compat_flag(c)
-            local descr = config.compat_descr(c)
+            -- Lookup the info for this specific compat option.
+            local flag, descr = ""
+            for k, v in pairs(config.compat_options) do
+                if v.compatlevel == c then
+                    flag = v.flag
+                    descr = v.descr
+                end
+            end
 
 			bio:print(string.format("\t\"%s.%s\",\t\t/* %d = %s %s */\n",
 	            flag, v.alias, v.num, descr, v.alias))

@@ -133,91 +133,13 @@ function util.stripAbiPrefix(funcname, abiprefix)
 end
 
 function util.processArgsize(syscall)
-    if #syscall.args ~= 0 or syscall.type.NODEF then
-        return "AS(" .. syscall.arg_alias .. ")"
+    if syscall.arg_alias ~= nil then
+        if #syscall.args ~= 0 or syscall.type.NODEF then
+            return "AS(" .. syscall.arg_alias .. ")"
+        end
     end
 
     return "0"
-end
-
-function util.cleanup()
-	--for _, v in pairs(files) do
-	--	assert(v:close())
-	--end
-
-	if config.cleantmp then
-		if lfs.dir(config.tmpspace) then
-			for fname in lfs.dir(tmpspace) do
-				if fname ~= "." and fname ~= ".." then
-					assert(os.remove(config.tmpspace .. "/" ..
-					    fname))
-				end
-			end
-		end
-
-		if lfs.attributes(config.tmpspace) and not lfs.rmdir(config.tmpspace) then
-			assert(io.stderr:write("Failed to clean up tmpdir: " ..
-			    config.tmpspace .. "\n"))
-		end
-	else
-		assert(io.stderr:write("Temp files left in " .. config.tmpspace ..
-		    "\n"))
-	end
-end
-
-
--- CREDIT: http://lua-users.org/wiki/CopyTable
-function util.shallowcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in pairs(orig) do
-            copy[orig_key] = orig_value
-        end
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-
--- CREDIT: http://lua-users.org/wiki/CopyTable
-function util.deepcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[util.deepcopy(orig_key)] = util.deepcopy(orig_value)
-        end
-        setmetatable(copy, util.deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-
--- CREDIT: http://lua-users.org/wiki/CopyTable
--- Save copied tables in `copies`, indexed by original table.
-function util.deepcopy(orig, copies)
-    copies = copies or {}
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        if copies[orig] then
-            copy = copies[orig]
-        else
-            copy = {}
-            copies[orig] = copy
-            for orig_key, orig_value in next, orig, nil do
-                copy[util.deepcopy(orig_key, copies)] = util.deepcopy(orig_value, copies)
-            end
-            setmetatable(copy, util.deepcopy(getmetatable(orig), copies))
-        end
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
 end
 
 -- CREDIT: Lua Game Development Cookbook, Mario Kasuba

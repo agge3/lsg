@@ -30,7 +30,6 @@ local FreeBSDSyscall = require("freebsd-syscall")
 local config = require("config")    -- Common config file mgt
 local util = require("util")
 local bsdio = require("bsdio")
-require("test/dump")
 
 -- Globals
 
@@ -39,18 +38,6 @@ local fh = "/dev/null"
 local sysproto = "" .. ".h"
 local sysproto_h = "" .. "_SYSPROTO_H_"
 
-
-local function lookupCompatFlag(compat_options, compatlevel)
-    for _, v in pairs(compat_options) do
-        if v.compatlevel == compatlevel then
-            return v.flag
-        end
-    end
-    return nil
-end
-
--- xxx tricky generation here, a lot of pieces in different places at different 
--- times
 local function genSysprotoH(tbl, config)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
@@ -60,16 +47,11 @@ local function genSysprotoH(tbl, config)
     -- Init the bsdio object, has macros and procedures for LSG specific io.
     local bio = bsdio:new({}, fh) 
 
-    --local main = bsdio:new({}, fh)
-    --local dcl = bsdio:new({}, fh)
-    --local aue = bsdio:new({}, fh)
-    --local compat = bsdio:new({}, fh)
-
     -- Write the generated tag.
     bio:generated("System call prototypes.")
 
     -- Write out the preamble.
-    bio:print([[
+    bio:print(string.format([[
 #ifndef %s
 #define	%s
 
@@ -99,7 +81,7 @@ struct thread;
 #define	PADR_(t)	0
 #endif
 
-]], config.sysproto_h, config.sysproto_h)
+]], config.sysproto_h, config.sysproto_h))
     
     -- pad64() is an io macro that will pad based on the result of 
     -- abi_changes().
@@ -122,7 +104,6 @@ struct thread;
         -- Tag an extra newline to the end, so it doesn't have to be worried 
         -- about later.
         bio:store(string.format("\n#ifdef %s\n\n", v.definition), v.compatlevel * 10)
-        print("First loop: " .. v.compatlevel)
 	end
 
     for k, v in pairs(s) do
@@ -137,16 +118,13 @@ struct thread;
         local audit_idx = 0xffffffff -- this should do
 
         -- Handle non-compatability.
-        if v.name == v:symbol() then
-
+        if v:native() then
             -- All these negation conditions are because (in general) these are
             -- cases where sysproto.h is not generated.
             if not v.type.NOARGS and
                not v.type.NOPROTO and
                not v.type.NODEF then
-
                 if v.args ~= nil then
-                    -- fh = sysarg
                     bio:print(string.format("struct %s {\n",
 		    	        v.arg_alias))
 
@@ -171,7 +149,6 @@ struct thread;
                     bio:print("};\n")
 
                 else
-                    -- fh = sysarg
                     bio:print(string.format(
 		    	        "struct %s {\n\tsyscallarg_t dummy;\n};\n", v.alias))
                 end
@@ -219,12 +196,6 @@ struct thread;
         -- 
         elseif c >= 3 then
             local idx = c * 10
-            --print(idx)
-            --print(idx)
-            --print(idx)
-            --print(idx)
-            --print(idx)
-            --print(idx)
             if not v.type.NOPROTO and
                not v.type.NODEF and
                not v.type.NOARGS then

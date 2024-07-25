@@ -30,7 +30,6 @@ local FreeBSDSyscall = require("freebsd-syscall")
 local config = require("config")		-- Common config file mgt
 local util = require("util")
 local bsdio = require("bsdio")
-require("test/dump")
 
 -- Globals
 local fh = "/dev/null" -- xxx temporary
@@ -43,14 +42,8 @@ local fh = "/dev/null" -- xxx temporary
 
 -- xxx need compat call count
 
--- Justify the comment column so that comments are all aligned on the same row.
--- There's many ways to align comments, so this is subject to change.
-local column = 0
-local function setMaxColumn(num)
-    if num > column then
-        column = num
-    end
-end
+-- To align comments.
+local column = 80
 
 local function genInitSysent(tbl, config)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
@@ -89,7 +82,7 @@ local function genInitSysent(tbl, config)
 
     bio:print(string.format([[
 /* The casts are bogus but will do for now. */
-struct sysent %s[] = {accessible
+struct sysent %s[] = {
 ]], config.switchname))
 
     -- Looping for each system call.
@@ -98,6 +91,7 @@ struct sysent %s[] = {accessible
         if v.num > max then
             max = v.num
         end
+
 
         local argssize = util.processArgsize(v)
 
@@ -114,7 +108,6 @@ struct sysent %s[] = {accessible
             str = string.format(
                 "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
                 argssize)
-            setMaxColumn(#str)
 
             -- Handle SYSMUX flag:
             if v.type.SYSMUX then
@@ -122,7 +115,6 @@ struct sysent %s[] = {accessible
 	        	    "nosys, .sy_auevent = AUE_NULL, " ..
 	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
 	        	    v.cap)
-                setMaxColumn(#str)
 
             -- Handle NOSTD flag:
             elseif v.type.NOSTD then
@@ -131,8 +123,6 @@ struct sysent %s[] = {accessible
 	        	    "lkmressys, .sy_auevent = AUE_NULL, " ..
 	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
 	        	    v.cap)
-                setMaxColumn(#str)
-                bio:print(str)
 
             -- Handle rest of non-compat:
             elseif v.type.STD or
@@ -148,13 +138,11 @@ struct sysent %s[] = {accessible
                         "%s, .sy_auevent = %s, .sy_flags = %s, " .. 
                         ".sy_thrcnt = %s },",
 	        		    v:symbol(), v.audit, v.cap, v.thr)
-                    setMaxColumn(#str)
 	        	else
                     str = str .. string.format(
                         "sys_%s, .sy_auevent = %s, .sy_flags = %s, " .. 
                         ".sy_thrcnt = %s },",
 	        		    v:symbol(), v.audit, v.cap, v.thr)
-                    setMaxColumn(#str)
 	        	end
 
                 else
@@ -166,9 +154,15 @@ struct sysent %s[] = {accessible
 
         -- Handle compatibility (everything >= FREEBSD3):
         elseif c >= 3 then
-            local flag = config.lookupCompatOption(c, flag)
-            flag = flag:lower()
-            local descr = config.lookupCompatOption(c, descr)
+            -- Lookup the info for this specific compat option.
+            local flag, descr = ""
+            for k, v in pairs(config.compat_options) do
+                if v.compatlevel == c then
+                    flag = v.flag
+                    flag = flag:lower()
+                    descr = v.descr
+                end
+            end
 
             if v.type.NOSTD then
                 str = string.format(
@@ -176,13 +170,11 @@ struct sysent %s[] = {accessible
 	    	        ".sy_auevent = %s, .sy_flags = 0, " ..
 	    	        ".sy_thrcnt = SY_THR_ABSENT },",
 	    	        "0", "lkmressys", "AUE_NULL")
-                setMaxColumn(#str)
 	        else
 	    	    str = string.format(
 	    	        "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, " ..
                     ".sy_thrcnt = %s },",
 	    	        flag, argssize, v:symbol(), v.audit, v.cap, v.thr)
-                setMaxColumn(#str)
             end
             comment = descr .. " " .. v.alias
 
@@ -192,7 +184,6 @@ struct sysent %s[] = {accessible
                 "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 	            ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
                 ".sy_thrcnt = SY_THR_ABSENT },")
-            setMaxColumn(#str)
             comment = "obsolete " .. v.alias
         
         -- Handle unimplemented:
@@ -202,7 +193,6 @@ struct sysent %s[] = {accessible
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
 		        ".sy_thrcnt = SY_THR_ABSENT },")
-            setMaxColumn(#str)
             comment = "" -- xxx not seeing where there is right now
 
         -- Handle reserved:
@@ -212,7 +202,6 @@ struct sysent %s[] = {accessible
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
 		        ".sy_thrcnt = SY_THR_ABSENT },")
-            setMaxColumn(#str)
             comment = "reserved for local use"
             
         else
@@ -220,11 +209,17 @@ struct sysent %s[] = {accessible
         end
 
         bio:print(str)
+
+        -- NOTE: Aligning comments doesn't really do much right now, other than 
+        -- align to 80 columns. That can be changed by keeping track of the 
+        -- columns for the desired line(s).
         local tabs = (column - #str) / 4
         for _ = 1, tabs do
             bio:print("\t")
         end
-	    bio:print(string.format("/* %d = %s */\n", 
+
+        -- NOTE: Comments are just tabbed from the line otherwise.
+	    bio:print(string.format("\t/* %d = %s */\n", 
             v.num, comment))
     end
 
