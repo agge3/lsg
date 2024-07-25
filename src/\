@@ -43,12 +43,13 @@ local fh = "/dev/null" -- xxx temporary
 
 -- xxx need compat call count
 
--- Justify the comment column so that comments are all aligned on the same row.
--- There's many ways to align comments, so this is subject to change.
-local column = 0
-local function setMaxColumn(num)
-    if num > column then
-        column = num
+-- xxx needs attention, semi-working
+local function alignSysentComment(column)
+    io.write("\t")
+    column = column + 8 - column % 8
+    while column < 56 do
+        io.write("\t")
+        column = column + 8
     end
 end
 
@@ -90,110 +91,107 @@ local function genInitSysent(tbl, config)
     bio:print(string.format([[
 /* The casts are bogus but will do for now. */
 struct sysent %s[] = {accessible
-]], config.switchname))
+]], config.switchname))6611
 
-    -- Looping for each system call.
+    -- Keep track of columns to align sysent comment.
+    local column
+
     for k, v in pairs(s) do
         local c = v:compat_level()
         if v.num > max then
             max = v.num
         end
 
-        local argssize = util.processArgsize(v)
+        --dump(v.args)
 
-        -- Comment is the function alias by default, but may change based on the 
-        -- type of system call.
+        local argssize = util.processArgsize(v)
         local comment = v.alias
 
         -- Creating a string first, to length the string and align comments
         -- based on its length.
         local str = ""
 
-        -- Handle native (non-compat):
-        if v:native() then
-            str = string.format(
-                "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
-                argssize)
-            setMaxColumn(#str)
+        -- Handle native (non-compatibility):
+        -- NOTE: If the system call's name matches its symbol then it's a native
+        -- system call.
+        if c == v:native() then
 
-            -- Handle SYSMUX flag:
+            str = string.format("\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", argssize)
+            bio:print(str)
+
+            -- Handle SYSMUX flag.
             if v.type.SYSMUX then
-                str = str .. string.format(
+
+                str = string.format(6611
 	        	    "nosys, .sy_auevent = AUE_NULL, " ..
 	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_STATIC },",
-	        	    v.cap)
-                setMaxColumn(#str)
-
-            -- Handle NOSTD flag:
-            elseif v.type.NOSTD then
-    
-	        	str = str .. string.format(
-	        	    "lkmressys, .sy_auevent = AUE_NULL, " ..
-	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
-	        	    v.cap)
-                setMaxColumn(#str)
+	        	    v.cap))
                 bio:print(str)
 
-            -- Handle rest of non-compat:
+            -- Handle NOSTD flag. 
+            elseif v.type.NOSTD then
+    
+	        	str = string.format(
+	        	    "lkmressys, .sy_auevent = AUE_NULL, " ..
+	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
+	        	    v.cap))
+                bio:print(str)
+
+            -- Handle rest of non-compatability.
+            -- XXX everything is looking reasonably well. NOT handling args 
+            -- correctly.
             elseif v.type.STD or
                    v.type.NODEF or
                    v.type.NOARGS or
                    v.type.NOPROTO then
-	            if v.name == "nosys" or 
+
+                -- xxx not sure these find call will work
+	        	if v.name == "nosys" or 
                    v.name == "lkmnosys" or
                    v.name == "sysarch" or
                    v.name:find("^freebsd") or
 	        	   v.name:find("^linux") then
-                    str = str .. string.format(
-                        "%s, .sy_auevent = %s, .sy_flags = %s, " .. 
-                        ".sy_thrcnt = %s },",
-	        		    v:symbol(), v.audit, v.cap, v.thr)
-                    setMaxColumn(#str)
+                    str = string.format("%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	        		    v:symbol(), v.audit, v.cap, v.thr))
+                    bio:print(str)
 	        	else
-                    str = str .. string.format(
-                        "sys_%s, .sy_auevent = %s, .sy_flags = %s, " .. 
-                        ".sy_thrcnt = %s },",
-	        		    v:symbol(), v.audit, v.cap, v.thr)
-                    setMaxColumn(#str)
+                    str = string.format("sys_%s, .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	        		    v:symbol(), v.audit, v.cap, v.thr))
+                    bio:print(str)
 	        	end
 
                 else
-                    -- Assume something went wrong.
-                    util.abort(1, 
-                        "Unable to generate system switch for system call: " .. 
-                        v.name)
+                    -- assume something went wrong
+                    util.abort(1, "Unable to generate system switch table entry for system call: " .. v.name)
                 end
+
 
         -- Handle compatibility (everything >= FREEBSD3):
         elseif c >= 3 then
-            local flag = config.lookupCompatOption(c, flag)
-            flag = flag:lower()
-            local descr = config.lookupCompatOption(c, descr)
+            local flag = config.compat_flag(c)
+            local descr = config.compat_descr(c)
 
             if v.type.NOSTD then
                 str = string.format(
 	    	        "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)%s, " ..
 	    	        ".sy_auevent = %s, .sy_flags = 0, " ..
 	    	        ".sy_thrcnt = SY_THR_ABSENT },",
-	    	        "0", "lkmressys", "AUE_NULL")
-                setMaxColumn(#str)
+	    	        "0", "lkmressys", "AUE_NULL"))
+                bio:print(str)
 	        else
 	    	    str = string.format(
-	    	        "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, " ..
-                    ".sy_thrcnt = %s },",
-	    	        flag, argssize, v:symbol(), v.audit, v.cap, v.thr)
-                setMaxColumn(#str)
+	    	        "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, .sy_thrcnt = %s },",
+	    	        flag, argssize, v:symbol(), v.audit, v.cap, v.thr))
+                bio:print(str)
             end
             comment = descr .. " " .. v.alias
 
         -- Handle obsolete:
         elseif v.type.OBSOL then
-	        str = string.format(
-                "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
-	            ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
-                ".sy_thrcnt = SY_THR_ABSENT },")
-            setMaxColumn(#str)
+	        str = "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
+	            ".sy_auevent = AUE_NULL, .sy_flags = 0, .sy_thrcnt = SY_THR_ABSENT },")
             comment = "obsolete " .. v.alias
+            bio:print(str)
         
         -- Handle unimplemented:
         -- xxx make sure there's no skipped syscalls and range is correct
@@ -201,31 +199,24 @@ struct sysent %s[] = {accessible
 		    str = string.format(
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
-		        ".sy_thrcnt = SY_THR_ABSENT },")
-            setMaxColumn(#str)
+		        ".sy_thrcnt = SY_THR_ABSENT },\t\t\t"))
             comment = "" -- xxx not seeing where there is right now
 
         -- Handle reserved:
         -- xxx make sure there's no skipped syscalls and range is correct
         elseif v.type.RESERVED then
-            str = string.format(
+            bio:print(string.format(
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
-		        ".sy_thrcnt = SY_THR_ABSENT },")
-            setMaxColumn(#str)
+		        ".sy_thrcnt = SY_THR_ABSENT },\t\t\t"))
             comment = "reserved for local use"
-            
-        else
-            -- do nothing
-        end
 
-        bio:print(str)
-        local tabs = (column - #str) / 4
-        for _ = 1, tabs do
-            bio:print("\t")
+        -- XXX have range available
+            
+        else -- do nothing
         end
-	    bio:print(string.format("/* %d = %s */\n", 
-            v.num, comment))
+	        bio:print(string.format("/* %d = %s */\n", 
+                v.num, comment))
     end
 
     -- End

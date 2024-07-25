@@ -306,23 +306,12 @@ function config.mergeCapability()
     end
 end
 
--- Compat flag needs to be indexed in multiple modules. This exposes the compat
--- flag more accessibly, front-loading the loop here.
-function config.compat_flag(compatlevel)
-    for _, v in pairs(config.compat_options) do
+-- Certain compat options need to be indexed in multiple modules. This offers a
+-- convenient lookup, front-loading the loop here.
+function config.lookupCompatOption(compatlevel)
+    for k, v in pairs(config.compat_options) do
         if v.compatlevel == compatlevel then
-            return v.flag:lower()
-        end
-    end
-    return nil
-end
-
--- Same as compat flag, compat description needs to be indexed in multiple 
--- modules.
-function config.compat_descr(compatlevel)
-    for _, v in pairs(config.compat_options) do
-        if v.compatlevel == compatlevel then
-            return v.descr
+            return k
         end
     end
     return nil
