@@ -104,7 +104,6 @@ function scarg:process()
         return true
     end
 
-    -- xxx print status message
     return false
 end
 
