@@ -91,8 +91,6 @@ struct sysent %s[] = {
         if v.num > max then
             max = v.num
         end
-
-
         local argssize = util.processArgsize(v)
 
         -- Comment is the function alias by default, but may change based on the 
@@ -104,7 +102,10 @@ struct sysent %s[] = {
         local str = ""
 
         -- Handle native (non-compat):
-        if v:native() then
+        -- NOTE: Loadable system calls are also treated as native, so that's why
+        -- they're being allowed in here. They'll be filtered through in deeper 
+        -- conditions.
+        if v:native() or v.name == "lkmnosys" then
             str = string.format(
                 "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
                 argssize)
@@ -118,7 +119,6 @@ struct sysent %s[] = {
 
             -- Handle NOSTD flag:
             elseif v.type.NOSTD then
-    
 	        	str = str .. string.format(
 	        	    "lkmressys, .sy_auevent = AUE_NULL, " ..
 	        	    ".sy_flags = %s, .sy_thrcnt = SY_THR_ABSENT },",
@@ -137,7 +137,7 @@ struct sysent %s[] = {
                     str = str .. string.format(
                         "%s, .sy_auevent = %s, .sy_flags = %s, " .. 
                         ".sy_thrcnt = %s },",
-	        		    v:symbol(), v.audit, v.cap, v.thr)
+	        		    v.arg_alias, v.audit, v.cap, v.thr)
 	        	else
                     str = str .. string.format(
                         "sys_%s, .sy_auevent = %s, .sy_flags = %s, " .. 
@@ -187,7 +187,6 @@ struct sysent %s[] = {
             comment = "obsolete " .. v.alias
         
         -- Handle unimplemented:
-        -- xxx make sure there's no skipped syscalls and range is correct
         elseif v.type.UNIMP then
 		    str = string.format(
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
@@ -238,6 +237,7 @@ local sysfile, configfile = arg[1], arg[2]
 config.merge(configfile)
 config.mergeCompat()
 config.mergeCapability()
+config.mergeChangesAbi()
 
 -- The parsed syscall table
 local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}

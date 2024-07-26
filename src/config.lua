@@ -66,7 +66,7 @@ config.compat_options = {}
 -- Important boolean keys: file, changes to the ABI, or no changes to the ABI. 
 config.file = false
 config.no_changes_abi = false
-config.changes_abi = false or not config.no_changes_abi
+config.changes_abi = false
 
 -- For each entry, the ABI flag is the key. One may also optionally provide an 
 -- expr, which are contained in an array associated with each key; expr gets 
@@ -237,6 +237,14 @@ function config.abiChanges(name)
 		util.abort(1, "abi_changes: unknown flag: " .. name)
 	end
     return config.abi_flags[name] ~= nil
+end
+
+-- Merge any changes to the ABI (from native) and handles if there shouldn't be
+-- changes.
+function config.mergeChangesAbi()
+    if config.no_changes_abi then 
+        config.changes_abi = false
+    end
 end
 
 --

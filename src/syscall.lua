@@ -84,9 +84,9 @@ function syscall:processAbiChanges()
     	self.arg_prefix = config.abi_func_prefix
     	self.prefix = config.abi_func_prefix
     	self.arg_alias = self.prefix .. self.name
-    	return false    
+    	return true
     end
-    return true
+    return false
 end
 
 -- Native is an arbitrarily large number to have a constant and not 
@@ -173,7 +173,7 @@ function syscall:addDef(line, words)
 	    -- These next three are optional, and either all present or all absent
 	    self.altname = words[5]
 	    self.alttag = words[6]
-	    self.altrtyp = words[7]
+	    self.alttype = words[7]
 	    return true
     end
     return false
@@ -222,7 +222,7 @@ function syscall:addArgs(line)
         if arg:process() then 
             arg:append(self.args)
         end
-        arg = nil -- nil the reference to trigger the finalizer
+        arg = nil -- nil the reference to trigger scarg's finalizer
         return true
     end
     return false
@@ -233,10 +233,23 @@ end
 -- RETURN: TRUE, if added succesfully. FALSE (or ABORT), if not
 --
 function syscall:isAdded(line)
-    -- Two cases: If this system call was a range or if it was a full system 
-    -- call and we're looking for a closing curly brace.
+    --
+    -- Three cases:
+    --  (1) This system call was a range of system calls - exit with specific 
+    --  procedures.
+    --  (2) This system call was a loadable system call - exit with specific 
+    --  procedures.
+    --  (3) (Common case) This system call was a full system call - confirm 
+    --  there's a closing curly brace and perform standard finalize procedure.
+    -- 
     if self.range then
-        self.range = false
+        self.alias = self.name
+        return true
+    elseif self.altname ~= nil and self.alttag ~= nil and 
+           self.alttype ~= nil then
+        self.alias = self.name
+        self.cap = "0"
+        self.thr = "SY_THR_ABSENT"
         return true
     elseif self.expect_rbrace then
 	    if not line:match("}$") then
@@ -296,9 +309,7 @@ function syscall:add(line)
     if self:addDef(line, words) then
         -- Cases where we just want to exit and add - nothing else to do.
         if self.range or self.name ~= "{" then
-            -- alias won't be set if we're exiting early, but is needed
-            self.alias = self.name
-            return true
+            return self:isAdded(line)
         end
         return false -- otherwise, definition added - keep going
     end
@@ -367,6 +378,29 @@ local function deepCopy(orig)
     return copy
 end
 
+-- CREDIT: http://lua-users.org/wiki/CopyTable
+-- Save copied tables in `copies`, indexed by original table.
+function deepCopy(orig, copies)
+    copies = copies or {}
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        if copies[orig] then
+            copy = copies[orig]
+        else
+            copy = {}
+            copies[orig] = copy
+            for orig_key, orig_value in next, orig, nil do
+                copy[deepCopy(orig_key, copies)] = deepCopy(orig_value, copies)
+            end
+            setmetatable(copy, deepCopy(getmetatable(orig), copies))
+        end
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 --
 -- As we're parsing the system calls, there's two types. Either we have a
 -- specific one, that's a assigned a number, or we have a range for things like
@@ -394,7 +428,7 @@ function syscall:iter()
                 -- In the case that it's not a range, we want a deep copy for 
                 -- the nested arguments table.
                 local deep_copy = deepCopy(self)
-				s = e + 1 -- increment the iterator
+				s = e + 1 -- then increment the iterator
                 return deep_copy
 			end
 		end
