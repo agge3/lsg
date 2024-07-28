@@ -13,6 +13,6 @@ src/test/syscalls.c
 src/test/sysproto.h
 src/test/init_sysent.c
 src/test/syscall.h
-src/test/sysent.mk
+src/test/syscall.mk
 src/test/systrace_args.c
 src/lib/
