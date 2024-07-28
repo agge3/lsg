@@ -1,4 +1,3 @@
-test
 src/template.lua
 src/useful_bits.lua
 src/out
@@ -8,3 +7,11 @@ src/old.lua
 notes
 issues
 src/tmp/
+src/test/DataDumper.lua
+src/test/out
+src/test/syscalls.c
+src/test/sysproto.h
+src/test/init_sysent.c
+src/test/syscall.h
+src/test/sysent.mk
+src/test/systrace_args.c

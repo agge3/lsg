@@ -18,6 +18,9 @@
 -- available in ports.  Currently, this script is compatible with lua from
 -- ports along with the compatible luafilesystem and lua-posix modules.
 
+-- Setup to be a module, or ran as its own script.
+local sysproto_h = {}
+
 -- When we have a path, add it to the package.path (. is already in the list)
 if arg[0]:match("/") then
 	local a = arg[0]:gsub("/[^/]+.lua$", "")
@@ -30,16 +33,13 @@ local FreeBSDSyscall = require("freebsd-syscall")
 local config = require("config")    -- Common config file mgt
 local util = require("util")
 local bsdio = require("bsdio")
-require("test/DataDumper")
 
 -- Globals
+-- File has not been decided yet; config will decide file. Default defined as
+-- null
+sysproto_h.file = "/dev/null"
 
-local fh = "/dev/null"
-
-local sysproto = "" .. ".h"
-local sysproto_h = "" .. "_SYSPROTO_H_"
-
-local function genSysprotoH(tbl, config)
+function sysproto_h.generate(tbl, config, fh)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
@@ -261,19 +261,26 @@ struct thread;
 
 end
 
--- Entry
+-- Check if the script is run directly
+if not _ENV then
+    -- Entry of script
+    if #arg < 1 or #arg > 2 then
+    	error("usage: " .. arg[0] .. " syscall.master")
+    end
+    
+    local sysfile, configfile = arg[1], arg[2]
+    
+    config.merge(configfile)
+    config.mergeCompat()
+    config.mergeCapability()
+    config.mergeChangesAbi()
+    
+    -- The parsed syscall table
+    local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 
-if #arg < 1 or #arg > 2 then
-	error("usage: " .. arg[0] .. " syscall.master")
+    sysproto_h.file = config.sysproto -- change file here
+    sysproto_h.generate(tbl, config, sysproto_h.file)
 end
 
-local sysfile, configfile = arg[1], arg[2]
-
-config.merge(configfile)
-config.mergeCompat()
-config.mergeCapability()
-
--- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
-
-genSysprotoH(tbl, config)
+-- Return the module
+return sysproto_h

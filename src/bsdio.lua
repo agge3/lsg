@@ -20,9 +20,7 @@ bsdio.__index = bsdio
 
 -- Wrapper for lua write() best practice. For a simpler write call.
 function bsdio:write(line)
-	--assert(self.bsdio:write(line))
-    -- xxx just to print output for now, and still use class
-    io.write(line)
+	assert(self.bsdio:write(line))
 end
 
 --

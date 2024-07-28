@@ -19,6 +19,9 @@
 -- available in ports.  Currently, this script is compatible with lua from
 -- ports along with the compatible luafilesystem and lua-posix modules.
 
+-- Setup to be a module, or ran as its own script.
+local syscall_h = {}
+
 -- When we have a path, add it to the package.path (. is already in the list)
 if arg[0]:match("/") then
 	local a = arg[0]:gsub("/[^/]+.lua$", "")
@@ -33,22 +36,21 @@ local util = require("util")
 local bsdio = require("bsdio")
 
 -- Globals
-
-local fh = "/dev/null" -- xxx temporary
-
-local syshdr = "" .. ".h"
+-- File has not been decided yet; config will decide file. Default defined as
+-- null
+syscall_h.file = "/dev/null"
 
 -- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
 -- replaced system calls dating back to FreeBSD 7. We are lucky that the
 -- system call filename is just the base symbol name for it.
-local function genSyscallsH(tbl, config)
+function syscall_h.generate(tbl, config, fh)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
     local max = 0
 
     -- Init the bsdio object, has macros and procedures for LSG specific io.
-    local bio = bsdio:new({ }, fh) 
+    local bio = bsdio:new({}, fh) 
 
     -- Write the generated tag.
 	bio:generated("System call numbers.")
@@ -73,12 +75,12 @@ local function genSyscallsH(tbl, config)
 			else
 				s = "freebsd" .. c
 			end
-			bio:write(string.format("\t\t\t\t/* %d is %s %s */", 
+			bio:write(string.format("\t\t\t\t/* %d is %s %s */\n", 
                 v.num, s, v.name))
 		elseif v.type.RESERVED then
-			bio:write(string.format("\t\t\t\t/* %d is reserved */", v.num))
+			bio:write(string.format("\t\t\t\t/* %d is reserved */\n", v.num))
 		elseif v.type.UNIMP then
-			bio:write(string.format("\t\t\t\t/* %d is unimplemented %s */", 
+			bio:write(string.format("\t\t\t\t/* %d is unimplemented %s */\n", 
                 v.num, v.name))
 		else -- do nothing
 		end
@@ -87,17 +89,26 @@ local function genSyscallsH(tbl, config)
         config.syscallprefix, max + 1))
 end
 
--- Entry
-
-if #arg < 1 or #arg > 2 then
-	error("usage: " .. arg[0] .. " syscall.master")
+-- Check if the script is run directly
+if not _ENV then
+    -- Entry of script
+    if #arg < 1 or #arg > 2 then
+    	error("usage: " .. arg[0] .. " syscall.master")
+    end
+    
+    local sysfile, configfile = arg[1], arg[2]
+    
+    config.merge(configfile)
+    config.mergeCompat()
+    config.mergeCapability()
+    config.mergeChangesAbi()
+    
+    -- The parsed syscall table
+    local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
+   
+    syscall_h.file = config.syshdr -- change file here
+    syscall_h.generate(tbl, config, syscall_h.file)
 end
 
-local sysfile, configfile = arg[1], arg[2]
-
-config.merge(configfile)
-
--- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
-
-genSyscallsH(tbl, config)
+-- Return the module
+return syscall_h

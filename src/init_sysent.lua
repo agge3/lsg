@@ -3,6 +3,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
+-- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 --
 -- Thanks to Kyle Evans for his makesyscall.lua in FreeBSD which served as
@@ -18,6 +19,9 @@
 -- available in ports.  Currently, this script is compatible with lua from
 -- ports along with the compatible luafilesystem and lua-posix modules.
 
+-- Setup to be a module, or ran as its own script.
+local init_sysent = {}
+
 -- When we have a path, add it to the package.path (. is already in the list)
 if arg[0]:match("/") then
 	local a = arg[0]:gsub("/[^/]+.lua$", "")
@@ -27,25 +31,25 @@ end
 -- The FreeBSD syscall generator
 local FreeBSDSyscall = require("freebsd-syscall")
 
-local config = require("config")		-- Common config file mgt
-local util = require("util")
-local bsdio = require("bsdio")
+local config = require("config")    -- common config file management
+local util = require("util")        -- utility functions
+local bsdio = require("bsdio")      -- lsg specific io and io macros
 
 -- Globals
-local fh = "/dev/null" -- xxx temporary
+-- File has not been decided yet; config will decide file. Default defined as
+-- null
+init_sysent.file = "/dev/null"
+-- To align comments.
+local column = 80
+
+-- xxx need compat call count
 
 -- Should be the same as makesyscalls.lua generates, except that we don't bother
 -- to align the system call stuff... it's badly broken anyway and looks like crap
 -- so we're declaring that a bug and removing all that crazy book-keeping to.
 -- If we need to do it, and I hope we don't, I'll just create a string and do
 -- #str to figure out how many tabs to add
-
--- xxx need compat call count
-
--- To align comments.
-local column = 80
-
-local function genInitSysent(tbl, config)
+function init_sysent.generate(tbl, config, fh)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
@@ -131,9 +135,6 @@ struct sysent %s[] = {
                    v.name == "sysarch" or
                    v.name:find("^freebsd") or
 	        	   v.name:find("^linux") then
-                    --v.cap = "ERROR CAP"
-                    --v.thr = "ERROR THR"
-                    --v.arg_alias = "ERROR ARG ALIAS"
                     str = str .. string.format(
                         "%s, .sy_auevent = %s, .sy_flags = %s, " .. 
                         ".sy_thrcnt = %s },",
@@ -195,7 +196,6 @@ struct sysent %s[] = {
             comment = "" -- xxx not seeing where there is right now
 
         -- Handle reserved:
-        -- xxx make sure there's no skipped syscalls and range is correct
         elseif v.type.RESERVED then
             str = string.format(
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
@@ -226,20 +226,26 @@ struct sysent %s[] = {
     bio:write("};")
 end
 
--- Entry
+-- Check if the script is run directly
+if not _ENV then
+    -- Entry of script
+    if #arg < 1 or #arg > 2 then
+    	error("usage: " .. arg[0] .. " syscall.master")
+    end
+    
+    local sysfile, configfile = arg[1], arg[2]
+    
+    config.merge(configfile)
+    config.mergeCompat()
+    config.mergeCapability()
+    config.mergeChangesAbi()
+    
+    -- The parsed syscall table
+    local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 
-if #arg < 1 or #arg > 2 then -- xxx subject to change
-	error("usage: " .. arg[0] .. " syscall.master")
+    init_sysent.file = config.syssw -- change file here
+    init_sysent.generate(tbl, config, init_sysent.file)
 end
 
-local sysfile, configfile = arg[1], arg[2]
-
-config.merge(configfile)
-config.mergeCompat()
-config.mergeCapability()
-config.mergeChangesAbi()
-
--- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
-
-genInitSysent(tbl, config)
+-- Return the module
+return init_sysent

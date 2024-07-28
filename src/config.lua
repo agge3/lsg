@@ -25,10 +25,14 @@ local util = require("util")
 --
 config = {
     sysnames = "syscalls.c",
-    sysproto = "sysproto.h",
-    sysproto_h = "_SYS_SYSPROTO_H_",
-    syshdr = "syscall.h",
+    syshdr = "../sys/syscall.h",
+    sysmk = "/dev/null",
     syssw = "init_sysent.c",
+    systrace = "systrace_args.c",
+    sysproto = "sysproto.h",
+    libsysmap = "/dev/null",
+    libsys_h = "/dev/null",
+    sysproto_h = "_SYS_SYSPROTO_H_",
     syscallprefix = "SYS_",
     switchname = "sysent",   
     namesname = "syscallnames", 

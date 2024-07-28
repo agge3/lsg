@@ -18,6 +18,9 @@
 -- available in ports.  Currently, this script is compatible with lua from
 -- ports along with the compatible luafilesystem and lua-posix modules.
 
+-- Setup to be a module, or ran as its own script.
+local systrace_args = {}
+
 -- When we have a path, add it to the package.path (. is already in the list)
 if arg[0]:match("/") then
 	local a = arg[0]:gsub("/[^/]+.lua$", "")
@@ -32,12 +35,11 @@ local util = require("util")
 local bsdio = require("bsdio")
 
 -- Globals
+-- File has not been decided yet; config will decide file. Default defined as
+-- null
+systrace_args.file = "/dev/null"
 
-local systrace = "" .. "_systrace_args.c"
-
-local fh = "/dev/null" -- xxx temporary
-
-local function genSystraceArgs(tbl, config)
+function systrace_args.generate(tbl, config, fh)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
@@ -232,17 +234,26 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 
 end
 
--- Entry
-
-if #arg < 1 or #arg > 2 then -- xxx subject to change
-	error("usage: " .. arg[0] .. " syscall.master")
+-- Check if the script is run directly
+if not _ENV then
+    -- Entry of script
+    if #arg < 1 or #arg > 2 then
+    	error("usage: " .. arg[0] .. " syscall.master")
+    end
+    
+    local sysfile, configfile = arg[1], arg[2]
+    
+    config.merge(configfile)
+    config.mergeCompat()
+    config.mergeCapability()
+    config.mergeChangesAbi()
+    
+    -- The parsed syscall table
+    local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
+   
+    systrace_args.file = config.systrace -- change file here
+    systrace_args.generate(tbl, config, systrace_args.file)
 end
 
-local sysfile, configfile = arg[1], arg[2]
-
-config.merge(configfile)
-
--- The parsed syscall table
-local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
-
-genSystraceArgs(tbl, config)
+-- Return the module
+return systrace_args

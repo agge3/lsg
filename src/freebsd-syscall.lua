@@ -95,7 +95,11 @@ function FreeBSDSyscall:parseSysfile()
 			if s:add(line) then
 				-- append to syscall list
 				for t in s:iter() do
-					table.insert(self.syscalls, t)
+                    if t:validate(t.num - 1) then
+					    table.insert(self.syscalls, t)
+                    else
+                        util.abort(1, "Skipped system call at number " .. t.num)
+                    end
 				end
 				s = nil
             end

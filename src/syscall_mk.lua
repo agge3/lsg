@@ -2,6 +2,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
+-- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
 -- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
 --
 --
@@ -19,7 +20,7 @@
 -- ports along with the compatible luafilesystem and lua-posix modules.
 
 -- Setup to be a module, or ran as its own script.
-local syscalls = {}
+local syscall_mk = {}
 
 -- When we have a path, add it to the package.path (. is already in the list)
 if arg[0]:match("/") then
@@ -30,70 +31,55 @@ end
 -- The FreeBSD syscall generator
 local FreeBSDSyscall = require("freebsd-syscall")
 
-local config = require("config")    -- Common config file mgt
-local util = require("util")
-local bsdio = require("bsdio")
+local config = require("config")    -- common config file management
+local util = require("util")        -- utility functions
+local bsdio = require("bsdio")      -- lsg specific io and io macros
 
 -- Globals
 -- File has not been decided yet; config will decide file. Default defined as
 -- null
-syscalls.file = "/dev/null"
+syscall_mk.file = "/dev/null"
 
-function syscalls.generate(tbl, config, fh)
+-- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
+-- replaced system calls dating back to FreeBSD 7. We are lucky that the
+-- system call filename is just the base symbol name for it.
+function syscall_mk.generate(tbl, config, fh)
     -- Grab the master syscalls table, and prepare bookkeeping for the max
     -- syscall number.
     local s = tbl.syscalls
     local max = 0
 
     -- Init the bsdio object, has macros and procedures for LSG specific io.
-    local bio = bsdio:new({ }, fh) 
+    local bio = bsdio:new({}, fh) 
 
     -- Write the generated tag.
-	bio:generated("System call names.")
+    bio:generated("FreeBSD system call object files.", "#")
 
-    bio:write(string.format("const char *%s[] = {\n", config.namesname))
-
+    bio:write("MIASM =  \\\n") -- preamble
 	for k, v in pairs(s) do
-		local c = v:compat_level()
-		if v.num > max then
-			max = v.num
-		end
+        local c = v:compat_level()
+        local last = false -- to keep track of if we're at the last system call
 
-        if v:native() then
-            bio:write(string.format("\t\"%s\",\t\t\t/* %d = %s */\n",
-	            v.alias, v.num, v.alias))
-		elseif c >= 3 then
-            -- Lookup the info for this specific compat option.
-            local flag, descr = ""
-            for k, v in pairs(config.compat_options) do
-                if v.compatlevel == c then
-                    flag = v.flag
-                    flag = flag:lower()
-                    descr = v.descr
-                end
+        if v.num >= max then
+            max = v.num
+        else
+            last = true
+        end
+
+		if v.type.STD or
+		   v.type.NOSTD or
+		   v.type.SYSMUX or
+		   c >= 7
+		then
+            if last then
+                -- At last system call, no backslash
+			    bio:write(string.format("\t%s.o", v:symbol()))
+            else 
+                -- Normal behavior
+			    bio:write(string.format("\t%s.o \\\n", v:symbol()))
             end
-
-			bio:write(string.format("\t\"%s.%s\",\t\t/* %d = %s %s */\n",
-	            flag, v.alias, v.num, descr, v.alias))
-		elseif v.type.RESERVED then
-			bio:write(string.format(
-                "\t\"#%d\",\t\t\t/* %d = reserved for local use */\n",
-	            v.num, v.num))
-		elseif v.type.UNIMP then
-            local comment = ""
-            comment = v.name -- xxx this is sometimes different
-			bio:write(string.format("\t\"#%d\",\t\t\t/* %d = %s */\n",
-		    v.num, v.num, comment))
-        elseif v.type.OBSOL then
-            bio:write(string.format(
-                "\t\"obs_%s\",\t\t\t/* %d = obsolete %s */\n",
-	            v.name, v.num, v.name))
-		else -- do nothing
-		end
+        end
 	end
-
-    -- End
-    bio:write("};")
 end
 
 -- Check if the script is run directly
@@ -112,10 +98,10 @@ if not _ENV then
     
     -- The parsed syscall table
     local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
-    
-    syscalls.file = config.sysnames -- change file here
-    syscalls.generate(tbl, config, syscalls.file)
+   
+    syscall_mk.file = config.sysmk -- change file here
+    syscall_mk.generate(tbl, config, syscall_mk.file)
 end
 
 -- Return the module
-return syscalls
+return syscall_mk

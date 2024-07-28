@@ -72,7 +72,7 @@ local function checkType(line, type)
 end
 
 function syscall:validate(prev)
-    return prev == self.num
+    return prev + 1 == self.num
 end
 
 -- If there are ABI changes from native, process the system call to match the
