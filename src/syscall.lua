@@ -162,9 +162,10 @@ end
 function syscall:addDef(line, words)
     if self.num == nil then
 	    self.num = words[1]
-        if tonumber(self.num) == nil then -- handle range of system calls
-            self.range = true
-        end
+
+        --if tonumber(self.num) == nil then -- handle range of system calls
+        --    self.range = true
+        --end
 
 	    self.audit = words[2]
 	    self.type = util.setFromString(words[3], "[^|]+")
@@ -242,16 +243,35 @@ function syscall:isAdded(line)
     --  (3) (Common case) This system call was a full system call - confirm 
     --  there's a closing curly brace and perform standard finalize procedure.
     -- 
-    if self.range then
-        self.alias = self.name
-        return true
-    elseif self.altname ~= nil and self.alttag ~= nil and 
-           self.alttype ~= nil then
-        self.alias = self.name
-        self.cap = "0"
-        self.thr = "SY_THR_ABSENT"
-        return true
-    elseif self.expect_rbrace then
+    --if self.range or self.name ~="{" then
+    --    self.alias = self.name
+    --    return true
+    --end
+    --if self.altname ~= nil and self.alttag ~= nil and 
+    --       self.alttype ~= nil then
+    --    self.alias = self.name
+    --    self.cap = "0"
+    --    self.thr = "SY_THR_ABSENT"
+    --    return true
+    --end
+    --if self.name ~= "{" then
+    --    self.alias = self.name
+    --    if tonumber(self.num) == nil then
+    --        --print("range caught at " .. self.num)
+    --        return true
+    --    elseif self.altname ~= nil then
+    --        --print("loadable system call caught at " .. self.num)
+    --        self.cap = "0"
+    --        self.thr = "SY_THR_ABSENT"
+    --        self.arg_alias = self:symbol() .. "_args"
+    --        --self.audit = "ERROR AT LKMNOSYS"
+    --        return true
+    --    else
+    --        --print("incomplete definition caught at " .. self.num)
+    --        return true
+    --    end
+    --end
+    if self.expect_rbrace then
 	    if not line:match("}$") then
 	    	util.abort(1, "Expected '}' found '" .. line .. "' instead.")
 	    end
@@ -308,8 +328,22 @@ function syscall:add(line)
     local words = util.split(line, "%S+")
     if self:addDef(line, words) then
         -- Cases where we just want to exit and add - nothing else to do.
-        if self.range or self.name ~= "{" then
-            return self:isAdded(line)
+        if self.name ~= "{" then
+            self.alias = self.name -- set for all these cases
+            -- This system call was a range.
+            if tonumber(self.num) == nil then
+                return true
+            -- This system call is a loadable system call.
+            elseif self.altname ~= nil and self.alttag ~= nil and 
+                   self.alttype ~= nil then
+                self.cap = "0"
+                self.thr = "SY_THR_ABSENT"
+                self.arg_alias = self:symbol() .. "_args"
+                return true
+            -- This system call does not have a full instantiation.
+            else
+                return true
+            end
         end
         return false -- otherwise, definition added - keep going
     end

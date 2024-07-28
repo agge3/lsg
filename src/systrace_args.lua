@@ -53,7 +53,7 @@ local function genSystraceArgs(tbl, config)
         This file is part of the DTrace syscall provider.
     ]])
 
-    bio:print(string.format([[
+    bio:write(string.format([[
 static void
 systrace_args(int sysnum, void *params, uint64_t *uarg, int *n_args)
 {
@@ -93,7 +93,7 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
         -- Handle non-compatability.
         if v.name == v:symbol() then
 
-	        bio:print(string.format([[
+	        bio:write(string.format([[
 	/* %s */
 	case %d: {
 ]], v.name, v.num))
@@ -108,11 +108,11 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 
         local n_args = #v.args
 
-            if v.args ~= nil and not v.type.SYSMUX then
+            if #v.args > 0 and not v.type.SYSMUX then
                 padding = ""
                 n_args = 0
                 
-		        bio:print(string.format(
+		        bio:write(string.format(
 		            "\t\tstruct %s *p = params;\n", v.arg_alias))
 		        bio:store("\t\tswitch (ndx) {\n", 1)
 
@@ -144,32 +144,32 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		    	    end
 
 		    	    if util.isPtrType(argtype) then
-		    	    	bio:print(string.format(
+		    	    	bio:write(string.format(
 		    	    	    "\t\tuarg[a++] = (%s)p->%s; /* %s */\n",
 		    	    	    config.ptr_intptr_t_cast,
 		    	    	    argname, argtype))
 
 		    	    elseif argtype == "union l_semun" then
-		    	    	bio:print(string.format(
+		    	    	bio:write(string.format(
 		    	    	    "\t\tuarg[a++] = p->%s.buf; /* %s */\n",
 		    	    	    argname, argtype))
 
 		    	    elseif argtype:sub(1,1) == "u" or argtype == "size_t" then
-		    	    	bio:print(string.format(
+		    	    	bio:write(string.format(
 		    	    	    "\t\tuarg[a++] = p->%s; /* %s */\n",
 		    	    	    argname, argtype))
 
 		    	    else
 		    	    	if argtype == "int" and argname == "_pad" and
                            config.abiChanges("pair_64bit") then
-		    	    		bio:print("#ifdef PAD64_REQUIRED\n")
+		    	    		bio:write("#ifdef PAD64_REQUIRED\n")
 		    	    	end
-		    	    	bio:print(string.format(
+		    	    	bio:write(string.format(
 		    	    	    "\t\tiarg[a++] = p->%s; /* %s */\n",
 		    	    	    argname, argtype))
 		    	    	if argtype == "int" and argname == "_pad" and 
                            config.abiChanges("pair_64bit") then
-		    	    		bio:print("#endif\n")
+		    	    		bio:write("#endif\n")
 		    	    	end
                     end
                 end
@@ -188,7 +188,7 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 ]], v.rettype), 2)
             end
 
-	    bio:print(string.format(
+	    bio:write(string.format(
 	        "\t\t*n_args = %d;\n\t\tbreak;\n\t}\n", n_args))
 	    bio:store("\t\tbreak;\n", 1)
 

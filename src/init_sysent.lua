@@ -57,15 +57,15 @@ local function genInitSysent(tbl, config)
     -- Write the generated tag.
     bio:generated("System call switch table.")
 
-	bio:print(tbl.includes)
+	bio:write(tbl.includes)
 
     -- Newline after includes and after this line.
-	bio:print("\n#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))\n")
+	bio:write("\n#define AS(name) (sizeof(struct name) / sizeof(syscallarg_t))\n")
 
     -- Write out all the compat directives from compat_options
     -- NOTE: Linux won't have any, so it's skipped as expected.
     for _, v in pairs(config.compat_options) do
-        bio:print(string.format([[
+        bio:write(string.format([[
 
 #ifdef %s
 #define %s(n, name) .sy_narg = n, .sy_call = (sy_call_t *)__CONCAT(%s, name)
@@ -77,10 +77,10 @@ local function genInitSysent(tbl, config)
 
     -- Add a newline only if there were compat_options
     if config.compat_options ~= nil then
-        bio:print("\n")
+        bio:write("\n")
     end
 
-    bio:print(string.format([[
+    bio:write(string.format([[
 /* The casts are bogus but will do for now. */
 struct sysent %s[] = {
 ]], config.switchname))
@@ -134,6 +134,9 @@ struct sysent %s[] = {
                    v.name == "sysarch" or
                    v.name:find("^freebsd") or
 	        	   v.name:find("^linux") then
+                    --v.cap = "ERROR CAP"
+                    --v.thr = "ERROR THR"
+                    --v.arg_alias = "ERROR ARG ALIAS"
                     str = str .. string.format(
                         "%s, .sy_auevent = %s, .sy_flags = %s, " .. 
                         ".sy_thrcnt = %s },",
@@ -174,7 +177,7 @@ struct sysent %s[] = {
 	    	    str = string.format(
 	    	        "\t{ %s(%s,%s), .sy_auevent = %s, .sy_flags = %s, " ..
                     ".sy_thrcnt = %s },",
-	    	        flag, argssize, v:symbol(), v.audit, v.cap, v.thr)
+	    	        flag, argssize, v.name, v.audit, v.cap, v.thr)
             end
             comment = descr .. " " .. v.alias
 
@@ -207,23 +210,23 @@ struct sysent %s[] = {
             -- do nothing
         end
 
-        bio:print(str)
+        bio:write(str)
 
         -- NOTE: Aligning comments doesn't really do much right now, other than 
         -- align to 80 columns. That can be changed by keeping track of the 
         -- columns for the desired line(s).
         local tabs = (column - #str) / 4
         for _ = 1, tabs do
-            bio:print("\t")
+            bio:write("\t")
         end
 
         -- NOTE: Comments are just tabbed from the line otherwise.
-	    bio:print(string.format("\t/* %d = %s */\n", 
+	    bio:write(string.format("\t/* %d = %s */\n", 
             v.num, comment))
     end
 
     -- End
-    bio:print("};")
+    bio:write("};")
 end
 
 -- Entry

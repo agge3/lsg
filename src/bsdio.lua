@@ -20,11 +20,8 @@ bsdio.__index = bsdio
 
 -- Wrapper for lua write() best practice. For a simpler write call.
 function bsdio:write(line)
-	assert(self.bsdio:write(line))
-end
-
--- xxx just to print output for now, and still use class
-function bsdio:print(line)
+	--assert(self.bsdio:write(line))
+    -- xxx just to print output for now, and still use class
     io.write(line)
 end
 
@@ -68,7 +65,7 @@ function bsdio:writeStorage()
         for k, v in util.ipairs_sparse(self.storage_levels) do
             for _, line in ipairs(v) do
                 -- xxx change to write when done
-                bsdio:print(line)
+                bsdio:write(line)
             end
         end
     end
@@ -92,7 +89,7 @@ function bsdio:generated(str, comment)
 
     -- Don't enter loop if it's the simple case.
     if str:find("\n") == nil then
-        self:print(string.format([[%s
+        self:write(string.format([[%s
  %s %s
  %s
  %s DO NOT EDIT-- this file is automatically %s.
@@ -102,14 +99,14 @@ function bsdio:generated(str, comment)
             self.tag, comment_end)) 
 
     else
-        self:print(string.format([[%s]], comment_start))
+        self:write(string.format([[%s]], comment_start))
         for line in str:gmatch("[^\n]*") do
             if line ~= nil then
-                self:print(string.format([[
+                self:write(string.format([[
  %s %s]], comment_middle, line))
             end
         end
-        self:print(string.format([[ %s
+        self:write(string.format([[ %s
  %s DO NOT EDIT-- this file is automatically %s
  %s
 

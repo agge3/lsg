@@ -49,7 +49,7 @@ local function genSyscalls(tbl, config)
     -- Write the generated tag.
 	bio:generated("System call names.")
 
-    bio:print(string.format("const char *%s[] = {\n", config.namesname))
+    bio:write(string.format("const char *%s[] = {\n", config.namesname))
 
 	for k, v in pairs(s) do
 		local c = v:compat_level()
@@ -61,7 +61,7 @@ local function genSyscalls(tbl, config)
         local comment = ""
 
         if v.name == v:symbol() then
-            bio:print(string.format("\t\"%s\",\t\t\t/* %d = %s */\n",
+            bio:write(string.format("\t\"%s\",\t\t\t/* %d = %s */\n",
 	            v.alias, v.num, v.alias))
 		elseif c >= 3 then
             -- Lookup the info for this specific compat option.
@@ -73,14 +73,14 @@ local function genSyscalls(tbl, config)
                 end
             end
 
-			bio:print(string.format("\t\"%s.%s\",\t\t/* %d = %s %s */\n",
+			bio:write(string.format("\t\"%s.%s\",\t\t/* %d = %s %s */\n",
 	            flag, v.alias, v.num, descr, v.alias))
 		elseif v.type.RESERVED then
 		    bio:write(string.format(
                 "\t\"obs_%s\",\t\t\t/* %d = obsolete %s */\n",
 	            v.name, v.num, comment))
 		elseif v.type.UNIMP then
-			bio:print(string.format("\t\"#%d\",\t\t\t/* %d = %s */\n",
+			bio:write(string.format("\t\"#%d\",\t\t\t/* %d = %s */\n",
 		    v.num, v.num, comment))
         elseif v.type.OBSOL then
             bio:write(string.format(
@@ -91,7 +91,7 @@ local function genSyscalls(tbl, config)
 	end
 
     -- End
-    bio:print("};")
+    bio:write("};")
 end
 
 -- Entry

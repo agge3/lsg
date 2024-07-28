@@ -62,7 +62,8 @@ local function genSyscallsH(tbl, config)
 			v.type.NOSTD or
 			v.type.SYSMUX or
 			c >= 7 then
-			print(string.format("#define\t%s%s\t%d", config.syscallprefix, v:symbol(), v.num))
+			bio:write(string.format("#define\t%s%s\t%d", 
+                config.syscallprefix, v:symbol(), v.num))
 		elseif c >= 0 then
 			local s
 			if c == 0 then
@@ -72,15 +73,18 @@ local function genSyscallsH(tbl, config)
 			else
 				s = "freebsd" .. c
 			end
-			print(string.format("\t\t\t\t/* %d is %s %s */", v.num, s, v.name))
+			bio:write(string.format("\t\t\t\t/* %d is %s %s */", 
+                v.num, s, v.name))
 		elseif v.type.RESERVED then
-			print(string.format("\t\t\t\t/* %d is reserved */", v.num))
+			bio:write(string.format("\t\t\t\t/* %d is reserved */", v.num))
 		elseif v.type.UNIMP then
-			print(string.format("\t\t\t\t/* %d is unimplemented %s */", v.num, v.name))
+			bio:write(string.format("\t\t\t\t/* %d is unimplemented %s */", 
+                v.num, v.name))
 		else -- do nothing
 		end
 	end
-	print(string.format("#define\t%sMAXSYSCALL\t%d", config.syscallprefix, max + 1))
+	bio:write(string.format("#define\t%sMAXSYSCALL\t%d", 
+        config.syscallprefix, max + 1))
 end
 
 -- Entry

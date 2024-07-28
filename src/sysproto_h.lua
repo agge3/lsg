@@ -30,6 +30,7 @@ local FreeBSDSyscall = require("freebsd-syscall")
 local config = require("config")    -- Common config file mgt
 local util = require("util")
 local bsdio = require("bsdio")
+require("test/DataDumper")
 
 -- Globals
 
@@ -51,7 +52,7 @@ local function genSysprotoH(tbl, config)
     bio:generated("System call prototypes.")
 
     -- Write out the preamble.
-    bio:print(string.format([[
+    bio:write(string.format([[
 #ifndef %s
 #define	%s
 
@@ -124,17 +125,19 @@ struct thread;
             if not v.type.NOARGS and
                not v.type.NOPROTO and
                not v.type.NODEF then
-                if v.args ~= nil then
-                    bio:print(string.format("struct %s {\n",
+                if #v.args > 0 then
+                    --print("entering args cond")
+                    --dump(v.args)
+                    bio:write(string.format("struct %s {\n",
 		    	        v.arg_alias))
 
 		    	    for _, v in ipairs(v.args) do
 		    		    if v.type == "int" and v.name == "_pad" and 
                            config.abiChanges("pair_64bit") then 
-                            bio:print("#ifdef PAD64_REQUIRED\n")
+                            bio:write("#ifdef PAD64_REQUIRED\n")
                         end
 
-		    		    bio:print(string.format(
+		    		    bio:write(string.format(
                             "\tchar %s_l_[PADL_(%s)]; %s %s; char %s_r_[PADR_(%s)];\n",
                             v.name, v.type,
 		    		        v.type, v.name,
@@ -142,21 +145,21 @@ struct thread;
 
                         if v.type == "int" and v.name == "_pad" and
                            config.abiChanges("pair_64bit") then
-                            bio:print("#endif\n")
+                            bio:write("#endif\n")
                         end
 		    		end
 
-                    bio:print("};\n")
+                    bio:write("};\n")
 
                 else
-                    bio:print(string.format(
-		    	        "struct %s {\n\tsyscallarg_t dummy;\n};\n", v.alias))
+                    bio:write(string.format(
+		    	        "struct %s {\n\tsyscallarg_t dummy;\n};\n", 
+                        v.arg_alias))
                 end
+            end
 
-            -- Same thing, except no arguments.
-            elseif not v.type.NOPROTO and
-                    not v.type.NODEF then
-
+            if not v.type.NOPROTO and
+               not v.type.NODEF then
                 local sys_prefix = "sys_"
 
                 if v.name == "nosys" or v.name == "lkmnosys" or
@@ -164,19 +167,21 @@ struct thread;
                    v.name:find("^linux") then
                     sys_prefix = ""
                 end
-
+                
+                -- xxx rettype is not correct
                 bio:store(string.format(
                     "%s\t%s%s(struct thread *, struct %s *);\n",
-		            v.rettype, v.prefix, v.name, v.alias), 1)
+		            v.rettype, sys_prefix, v.name, v.arg_alias), 1)
 
                 -- Audit defines are stored at an arbitrarily large number so 
                 -- that they're always at the end; to allow compat entries to 
                 -- just be indexed by their compat level.
 		        bio:store(string.format("#define\t%sAUE_%s\t%s\n",
 		            config.syscallprefix, v.alias, v.audit), audit_idx) 
+            end
 
             -- Handle reached end of native.
-            elseif max >= v.num then
+            if max >= v.num then
                 -- nothing for now
             else
                 -- all cases covered, do nothing
@@ -199,7 +204,7 @@ struct thread;
             if not v.type.NOPROTO and
                not v.type.NODEF and
                not v.type.NOARGS then
-                if v.args ~= nil then
+                if #v.args > 0 then
                     bio:store(string.format("struct %s {\n", v.arg_alias), idx)
                     for _, arg in ipairs(v.args) do
 		                bio:store(string.format(
@@ -236,12 +241,23 @@ struct thread;
         -- If compat entries are indexed by 10s, then 9 will always be the end 
         -- of that compat entry.
         local end_idx = (v.compatlevel * 10) + 9
-        bio:store(string.format("\n#endif /* %s */\n", v.definition), end_idx)
+        -- Need an extra newline after #endif
+        bio:store(string.format("\n#endif /* %s */\n\n", v.definition), end_idx)
 	end
 
     if bio.storage_levels ~= nil then
         bio:writeStorage()
     end
+
+    -- After everything has been unrolled, tag the ending bits.
+    bio:write(string.format([[
+
+#undef PAD_
+#undef PADL_
+#undef PADR_
+
+#endif /* !%s */
+]], config.sysproto_h))
 
 end
 
