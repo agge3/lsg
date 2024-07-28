@@ -47,6 +47,7 @@ function sysproto_h.generate(tbl, config, fh)
 
     -- Init the bsdio object, has macros and procedures for LSG specific io.
     local bio = bsdio:new({}, fh) 
+    bio.storage_levels = {} -- make sure storage is clear
 
     -- Write the generated tag.
     bio:generated("System call prototypes.")
@@ -208,15 +209,17 @@ struct thread;
                     bio:store(string.format("struct %s {\n", v.arg_alias), idx)
                     for _, arg in ipairs(v.args) do
 		                bio:store(string.format(
-		                    "\tchar %s_l_[PADL_(%s)]; %s %s; char %s_r_[PADR_(%s)];\n",
+		                    "\tchar %s_l_[PADL_(%s)]; %s %s; " ..
+                            "char %s_r_[PADR_(%s)];\n",
 		                    arg.name, arg.type,
 		                    arg.type, arg.name,
 		                    arg.name, arg.type), idx)
 		             end
 		             bio:store("};\n", idx)
                 else 
-                     bio:store(string.format(
-		                 "struct %s {\n\tsyscallarg_t dummy;\n};\n", v.arg_alias), idx)
+                     -- NOTE: Not stored, writen sequentially in the first run.
+                     bio:write(string.format(
+		                 "struct %s {\n\tsyscallarg_t dummy;\n};\n", v.arg_alias))
                 end
             end
 

@@ -47,6 +47,7 @@ function systrace_args.generate(tbl, config, fh)
 
     -- Init the bsdio object, has macros and procedures for LSG specific io.
     local bio = bsdio:new({}, fh) 
+    bio.storage_levels = {} -- make sure storage is clear
 
     -- generated() will be able to handle the newline here.
     -- NOTE: This results in a different output than makesyscalls.lua 

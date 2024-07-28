@@ -62,7 +62,6 @@ function bsdio:writeStorage()
     if self.storage_levels ~= nil then
         for k, v in util.ipairs_sparse(self.storage_levels) do
             for _, line in ipairs(v) do
-                -- xxx change to write when done
                 bsdio:write(line)
             end
         end
