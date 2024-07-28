@@ -64,7 +64,7 @@ function syscall_h.generate(tbl, config, fh)
 			v.type.NOSTD or
 			v.type.SYSMUX or
 			c >= 7 then
-			bio:write(string.format("#define\t%s%s\t%d", 
+			bio:write(string.format("#define\t%s%s\t%d\n", 
                 config.syscallprefix, v:symbol(), v.num))
 		elseif c >= 0 then
 			local s
@@ -90,7 +90,7 @@ function syscall_h.generate(tbl, config, fh)
 end
 
 -- Check if the script is run directly
-if not _ENV then
+if not pcall(debug.getlocal, 4, 1) then
     -- Entry of script
     if #arg < 1 or #arg > 2 then
     	error("usage: " .. arg[0] .. " syscall.master")

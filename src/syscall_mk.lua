@@ -44,10 +44,12 @@ syscall_mk.file = "/dev/null"
 -- replaced system calls dating back to FreeBSD 7. We are lucky that the
 -- system call filename is just the base symbol name for it.
 function syscall_mk.generate(tbl, config, fh)
-    -- Grab the master syscalls table, and prepare bookkeeping for the max
-    -- syscall number.
+    -- Grab the master system calls table.
     local s = tbl.syscalls
-    local max = 0
+    -- Bookkeeping for keeping track of when we're at the last system call (no 
+    -- backslash).
+    local size = #s
+    local idx = 0
 
     -- Init the bsdio object, has macros and procedures for LSG specific io.
     local bio = bsdio:new({}, fh) 
@@ -58,20 +60,13 @@ function syscall_mk.generate(tbl, config, fh)
     bio:write("MIASM =  \\\n") -- preamble
 	for k, v in pairs(s) do
         local c = v:compat_level()
-        local last = false -- to keep track of if we're at the last system call
-
-        if v.num >= max then
-            max = v.num
-        else
-            last = true
-        end
-
+        idx = idx + 1
 		if v.type.STD or
 		   v.type.NOSTD or
 		   v.type.SYSMUX or
 		   c >= 7
 		then
-            if last then
+            if idx >= size then
                 -- At last system call, no backslash
 			    bio:write(string.format("\t%s.o", v:symbol()))
             else 
@@ -83,7 +78,7 @@ function syscall_mk.generate(tbl, config, fh)
 end
 
 -- Check if the script is run directly
-if not _ENV then
+if not pcall(debug.getlocal, 4, 1) then
     -- Entry of script
     if #arg < 1 or #arg > 2 then
     	error("usage: " .. arg[0] .. " syscall.master")

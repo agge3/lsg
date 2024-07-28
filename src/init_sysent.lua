@@ -56,7 +56,7 @@ function init_sysent.generate(tbl, config, fh)
     local max = 0
 
     -- Init the bsdio object, has macros and procedures for LSG specific io.
-    local bio = bsdio:new({ }, fh) 
+    local bio = bsdio:new({}, fh) 
 
     -- Write the generated tag.
     bio:generated("System call switch table.")
@@ -227,7 +227,7 @@ struct sysent %s[] = {
 end
 
 -- Check if the script is run directly
-if not _ENV then
+if not pcall(debug.getlocal, 4, 1) then
     -- Entry of script
     if #arg < 1 or #arg > 2 then
     	error("usage: " .. arg[0] .. " syscall.master")

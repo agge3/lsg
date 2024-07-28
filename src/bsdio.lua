@@ -96,14 +96,17 @@ function bsdio:generated(str, comment)
 ]], comment_start, comment_middle, str, comment_middle, comment_middle, 
             self.tag, comment_end)) 
 
+    -- For multi-line comments - expects newline as delimiter.
     else
-        self:write(string.format([[%s]], comment_start))
-        for line in str:gmatch("[^\n]*") do
+        self:write(string.format("%s\n", comment_start)) -- "/*"
+        for line in str:gmatch("[^\n]+") do
             if line ~= nil then
-                self:write(string.format([[
- %s %s]], comment_middle, line))
+                -- Write each line with proper comment indentation (strip 
+                -- newline), and tag a newline to the end.
+                self:write(string.format(" %s %s\n", comment_middle, line))
             end
         end
+        -- Continue as normal...
         self:write(string.format([[ %s
  %s DO NOT EDIT-- this file is automatically %s
  %s

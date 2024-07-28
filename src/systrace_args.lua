@@ -50,10 +50,8 @@ function systrace_args.generate(tbl, config, fh)
 
     -- generated() will be able to handle the newline here.
     -- NOTE: This results in a different output than makesyscalls.lua 
-    bio:generated([[
-        System call argument to DTrace register array converstion.
-        This file is part of the DTrace syscall provider.
-    ]])
+    bio:generated("System call argument to DTrace register array converstion.\n"
+                  .. "This file is part of the DTrace syscall provider.")
 
     bio:write(string.format([[
 static void
@@ -235,7 +233,7 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 end
 
 -- Check if the script is run directly
-if not _ENV then
+if not pcall(debug.getlocal, 4, 1) then
     -- Entry of script
     if #arg < 1 or #arg > 2 then
     	error("usage: " .. arg[0] .. " syscall.master")

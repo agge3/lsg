@@ -56,7 +56,7 @@ local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
 -- Test output files
 syscalls.file = "test/syscalls.c"
 syscall_h.file = "test/syscall.h"
-syscall_mk.file = "test/sysent.mk"
+syscall_mk.file = "test/syscall.mk"
 init_sysent.file = "test/init_sysent.c"
 systrace_args.file = "test/systrace_args.c"
 sysproto_h.file = "test/sysproto.h"
