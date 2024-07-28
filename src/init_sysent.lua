@@ -102,10 +102,7 @@ struct sysent %s[] = {
         local str = ""
 
         -- Handle native (non-compat):
-        -- NOTE: Loadable system calls are also treated as native, so that's why
-        -- they're being allowed in here. They'll be filtered through in deeper 
-        -- conditions.
-        if v:native() or v.name == "lkmnosys" then
+        if v:native() then
             str = string.format(
                 "\t{ .sy_narg = %s, .sy_call = (sy_call_t *)", 
                 argssize)

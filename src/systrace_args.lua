@@ -91,8 +91,7 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
         argssize = util.processArgsize(v)
 
         -- Handle non-compatability.
-        if v.name == v:symbol() then
-
+        if v:native() then
 	        bio:write(string.format([[
 	/* %s */
 	case %d: {
@@ -106,11 +105,13 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 	case %d:
 ]], v.name, v.num), 2)
 
-        local n_args = #v.args
+            local n_args = #v.args
+            if v.type.SYSMUX then
+                n_args = 0
+            end
 
             if #v.args > 0 and not v.type.SYSMUX then
                 padding = ""
-                n_args = 0
                 
 		        bio:write(string.format(
 		            "\t\tstruct %s *p = params;\n", v.arg_alias))
@@ -127,12 +128,12 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		    	    end
 
 		    	    -- Pointer arg?
+                    local desc = ""
 		    	    if argtype:find("*") then
 		    	    	desc = "userland " .. argtype
 		    	    else
 		    	    	desc = argtype;
 		    	    end
-
 		    	    bio:store(string.format(
 		    	        "\t\tcase %d%s:\n\t\t\tp = \"%s\";\n\t\t\tbreak;\n",
 		    	        idx - 1, padding, desc), 1)
@@ -197,6 +198,32 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
             -- do nothing, only for native
         end
     end
+
+    bio:write(string.format([[
+    default:
+        *n_args = 0;
+        break;
+    };
+}
+]]))
+
+    bio:store(string.format([[
+    default:
+        break;
+    };
+    if (p != NULL)
+        strlcpy(desc, p, descsz);
+}
+]]), 1)
+
+    bio:store(string.format([[
+    default:
+        break;
+    };
+    if (p != NULL)
+        strlcpy(desc, p, descsz);
+}
+]]), 2)
 
     -- Write all stored lines.
     if bio.storage_levels ~= nil then

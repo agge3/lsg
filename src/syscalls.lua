@@ -57,10 +57,7 @@ local function genSyscalls(tbl, config)
 			max = v.num
 		end
 
-        -- xxx
-        local comment = ""
-
-        if v.name == v:symbol() then
+        if v:native() then
             bio:write(string.format("\t\"%s\",\t\t\t/* %d = %s */\n",
 	            v.alias, v.num, v.alias))
 		elseif c >= 3 then
@@ -69,6 +66,7 @@ local function genSyscalls(tbl, config)
             for k, v in pairs(config.compat_options) do
                 if v.compatlevel == c then
                     flag = v.flag
+                    flag = flag:lower()
                     descr = v.descr
                 end
             end
@@ -78,7 +76,7 @@ local function genSyscalls(tbl, config)
 		elseif v.type.RESERVED then
 		    bio:write(string.format(
                 "\t\"obs_%s\",\t\t\t/* %d = obsolete %s */\n",
-	            v.name, v.num, comment))
+	            v.name, v.num, v.name))
 		elseif v.type.UNIMP then
 			bio:write(string.format("\t\"#%d\",\t\t\t/* %d = %s */\n",
 		    v.num, v.num, comment))

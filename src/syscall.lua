@@ -356,9 +356,15 @@ function syscall:add(line)
     return self:isAdded(line) -- final validation, before adding
 end
 
+--
 -- Return TRUE if this system call is native, FALSE if not
+--
+-- NOTE: The other system call names are also treated as native, so that's why
+-- they're being allowed in here.
+--
 function syscall:native()
-    return self:compat_level() == native
+    return self:compat_level() == native or self.name == "lkmnosys" or 
+           self.name == "nosys" or self.name == "sysarch"
 end
 
 function syscall:new(obj)
