@@ -318,23 +318,4 @@ function config.mergeCapability()
     end
 end
 
--- xxx not liking this, may remove
--- Certain compat options need to be indexed in multiple modules. This offers a
--- convenient lookup, front-loading the loop here.
---function config.lookupCompatOption(compatlevel, option)
---    for k, v in pairs(config.compat_options) do
---        if v.compatlevel == compatlevel then
---            return k
---        end
---    end
---    return nil
---end
-
-config.cleantmp = true
---local tmpspace = "/tmp/sysent." .. unistd.getpid() .. "/"
-config.tmpspace = "tmp/"
-
--- Opened files
-config.files = {}
-
 return config
