@@ -20,7 +20,7 @@
 -- ports along with the compatible luafilesystem and lua-posix modules.
 
 -- Setup to be a module, or ran as its own script.
-local syscall_h = {}
+local syscall_mk = {}
 
 -- When we have a path, add it to the package.path (. is already in the list)
 if arg[0]:match("/") then
@@ -31,62 +31,50 @@ end
 -- The FreeBSD syscall generator
 local FreeBSDSyscall = require("freebsd-syscall")
 
-local config = require("config")		-- Common config file mgt
-local util = require("util")
-local bsdio = require("bsdio")
+local config = require("config")    -- common config file management
+local util = require("util")        -- utility functions
+local bsdio = require("bsdio")      -- lsg specific io and io macros
 
 -- Globals
 -- File has not been decided yet; config will decide file. Default defined as
 -- null
-syscall_h.file = "/dev/null"
+syscall_mk.file = "/dev/null"
 
 -- Libc has all the STD, NOSTD and SYSMUX system calls in it, as well as
 -- replaced system calls dating back to FreeBSD 7. We are lucky that the
 -- system call filename is just the base symbol name for it.
-function syscall_h.generate(tbl, config, fh)
-    -- Grab the master syscalls table, and prepare bookkeeping for the max
-    -- syscall number.
+function syscall_mk.generate(tbl, config, fh)
+    -- Grab the master system calls table.
     local s = tbl.syscalls
-    local max = 0
+    -- Bookkeeping for keeping track of when we're at the last system call (no 
+    -- backslash).
+    local size = #s
+    local idx = 0
 
     -- Init the bsdio object, has macros and procedures for LSG specific io.
     local bio = bsdio:new({}, fh) 
 
     -- Write the generated tag.
-	bio:generated("System call numbers.")
+    bio:generated("FreeBSD system call object files.", "#")
 
+    bio:write("MIASM =  \\\n") -- preamble
 	for k, v in pairs(s) do
-		local c = v:compat_level()
-		if v.num > max then
-			max = v.num
-		end
-		if  v.type.STD or
-			v.type.NOSTD or
-			v.type.SYSMUX or
-			c >= 7 then
-			bio:write(string.format("#define\t%s%s\t%d\n", 
-                config.syscallprefix, v:symbol(), v.num))
-		elseif c >= 0 then
-			local s
-			if c == 0 then
-				s = "obsolete"
-			elseif c == 3 then
-				s = "old"
-			else
-				s = "freebsd" .. c
-			end
-			bio:write(string.format("\t\t\t\t/* %d is %s %s */\n", 
-                v.num, s, v.name))
-		elseif v.type.RESERVED then
-			bio:write(string.format("\t\t\t\t/* %d is reserved */\n", v.num))
-		elseif v.type.UNIMP then
-			bio:write(string.format("\t\t\t\t/* %d is unimplemented %s */\n", 
-                v.num, v.name))
-		else -- do nothing
-		end
+        local c = v:compat_level()
+        idx = idx + 1
+		if v.type.STD or
+		   v.type.NOSTD or
+		   v.type.SYSMUX or
+		   c >= 7
+		then
+            if idx >= size then
+                -- At last system call, no backslash
+			    bio:write(string.format("\t%s.o", v:symbol()))
+            else 
+                -- Normal behavior
+			    bio:write(string.format("\t%s.o \\\n", v:symbol()))
+            end
+        end
 	end
-	bio:write(string.format("#define\t%sMAXSYSCALL\t%d", 
-        config.syscallprefix, max + 1))
 end
 
 -- Check if the script is run directly
@@ -106,9 +94,9 @@ if not pcall(debug.getlocal, 4, 1) then
     -- The parsed syscall table
     local tbl = FreeBSDSyscall:new{sysfile = sysfile, config = config}
    
-    syscall_h.file = config.syshdr -- change file here
-    syscall_h.generate(tbl, config, syscall_h.file)
+    syscall_mk.file = config.sysmk -- change file here
+    syscall_mk.generate(tbl, config, syscall_mk.file)
 end
 
 -- Return the module
-return syscall_h
+return syscall_mk

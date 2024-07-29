@@ -23,11 +23,6 @@ function bsdio:write(line)
 	assert(self.bsdio:write(line))
 end
 
--- xxx just to print output for now, and still use class
-function bsdio:print(line)
-    print(line)
-end
-
 --
 -- A write macro for the PAD64 preprocessor directive. 
 -- PARAM: bool, TRUE to pad
@@ -44,9 +39,33 @@ function bsdio:pad64(bool)
     end
 end
 
+
 -- Returns the generated tag. Useful if only the tag is needed.
 function bsdio:tag()
     return self.tag
+end
+
+bsdio.storage_levels = {}
+
+-- Store lines for later writing. Can also specify which order (level) to store
+-- in.
+-- Useful when a file has multiple stages of generation.
+function bsdio:store(str, level)
+    level = level or 1 -- default to level one if not provided
+    self.storage_levels[level] = self.storage_levels[level] or {}
+    table.insert(self.storage_levels[level], str)
+end
+
+-- Write all storage; lines are in the order they were inserted and levels are 
+-- in the order they were specified.
+function bsdio:writeStorage()
+    if self.storage_levels ~= nil then
+        for k, v in util.ipairs_sparse(self.storage_levels) do
+            for _, line in ipairs(v) do
+                bsdio:write(line)
+            end
+        end
+    end
 end
 
 --
@@ -72,20 +91,25 @@ function bsdio:generated(str, comment)
  %s
  %s DO NOT EDIT-- this file is automatically %s.
  %s
+
 ]], comment_start, comment_middle, str, comment_middle, comment_middle, 
             self.tag, comment_end)) 
 
+    -- For multi-line comments - expects newline as delimiter.
     else
-        self:write(string.format([[%s]], comment_start))
-        for line in str:gmatch("[^\n]*") do
+        self:write(string.format("%s\n", comment_start)) -- "/*"
+        for line in str:gmatch("[^\n]+") do
             if line ~= nil then
-                self:write(string.format([[
- %s %s]], comment_middle, line))
+                -- Write each line with proper comment indentation (strip 
+                -- newline), and tag a newline to the end.
+                self:write(string.format(" %s %s\n", comment_middle, line))
             end
         end
+        -- Continue as normal...
         self:write(string.format([[ %s
  %s DO NOT EDIT-- this file is automatically %s
  %s
+
 ]], comment_middle, comment_middle, self.tag, comment_end))
     end
 end

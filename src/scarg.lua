@@ -64,13 +64,14 @@ end
 --
 function scarg:process()
     -- Much of this is identical to makesyscalls.lua
-    -- Notable changes are: using "self" for OOP, arg_abi_change is now (local)
-    -- abi_changes, and abi_changes is now global_abi_changes
+    -- Notable changes are: using `self` for OOP, arg_abi_change is now (local)
+    -- abi_changes, and abi_changes is now global_changes_abi. There's also a
+    -- helper function mergeGlobal() to merge changes into the global config.
     if self.type ~= "" and self.name ~= "void" then
 		-- util.is64bitType() needs a bare type so check it after argname
 		-- is removed
-		self.global_abi_changes = config.abiChanges("pair_64bit") and 
-                                 util.is64bitType(self.type)
+		self.global_changes_abi = config.abiChanges("pair_64bit") and 
+                                  util.is64bitType(self.type)
 
 		self.type = self.type:gsub("intptr_t", config.abi_intptr_t)
 		self.type = self.type:gsub("semid_t", config.abi_semid_t)
@@ -101,10 +102,12 @@ function scarg:process()
 			    config.abi_type_suffix)
 		end
 
+        -- Finally, merge any changes to the ABI into the global config.
+        self:mergeGlobal()
+
         return true
     end
 
-    -- xxx print status message
     return false
 end
 
@@ -124,6 +127,32 @@ function scarg:pad(tbl)
     end
 
     return false
+end
+
+--
+-- Append to the system call's argument table.
+-- NOTE: Appends to the end, "order" is the responsibility of the caller.
+-- RETURN: TRUE if appended, FALSE if not
+--
+function scarg:insert()
+    if config.abiChanges("pair_64bit") and util.is64bitType(self.type) then
+        self:pad(tbl)
+    	table.insert(self.arg, {
+    		type = "uint32_t",
+    		name = self.name .. "1",
+    	})
+    	table.insert(self.arg, {
+    		type = "uint32_t",
+    		name = self.name .. "2",
+    	})
+    else
+    	table.insert(self.arg, {
+    		type = self.type,
+    		name = self.name,
+    	})
+        return self.arg
+    end
+    return self.arg
 end
 
 --
@@ -153,6 +182,10 @@ function scarg:append(tbl)
 
     return false
 end
+
+function scarg:getArg()
+    return self.arg
+end
         
 -- Default constructor. scarg HAS a finalizer procedure so MAKE SURE to nil the
 -- reference.
@@ -165,24 +198,17 @@ function scarg:new(obj, line)
 	self.abi_changes = false
     self.global_abi_changes = false
 
+    self.arg = {}
+
     obj:init()
-        
-    -- Setup lua "destructor", to merge the global ABI change flag into the 
-    -- global config table. We've made sure to the nil the reference so this 
-    -- should be a consistent guarantee.
-    local proxy = setmetatable({ }, {
-        __gc = function()
-            obj:finalizer()
-        end
-    })
-    obj.__gcproxy = proxy
 
 	return obj
 end
 
-function scarg:finalizer()
+-- Merge any changes to the ABI (changes from native) into the global config.
+function scarg:mergeGlobal()
     if self.global_changes_abi then
-         -- xxx this is what we're intending to do here, right?
+        -- xxx this is what we're intending to do here, right?
         config.changes_abi = self.global_changes_abi
     end
 end

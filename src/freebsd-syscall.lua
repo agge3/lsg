@@ -17,50 +17,32 @@ local FreeBSDSyscall = {}
 
 FreeBSDSyscall.__index = FreeBSDSyscall
 
--- xxx probably a better place for this
-local function validate()
-end
-
--- xxx this will likely need to go here
+-- Processes compatability options in the global config and inserts them into
+-- known_flags to reference.
 function FreeBSDSyscall:processCompat()
-    -- xxx haven't reworked yet
-	--local nval = 0
-	--for _, v in pairs(known_flags) do
-	--	if v > nval then
-	--		nval = v
-	--	end
-	--end
+	for _, v in pairs(config.compat_options) do
+		if v.stdcompat ~= nil then
+			local stdcompat = v.stdcompat
+			v.definition = "COMPAT_" .. stdcompat:upper()
+			v.compatlevel = tonumber(stdcompat:match("([0-9]+)$"))
+			v.flag = stdcompat:gsub("FREEBSD", "COMPAT")
+			v.prefix = stdcompat:lower() .. "_"
+			v.descr = stdcompat:lower()
+		end
 
-	--nval = nval << 1
-	--for _, v in pairs(compat_options) do
-	--	if v.stdcompat ~= nil then
-	--		local stdcompat = v.stdcompat
-	--		v.definition = "COMPAT_" .. stdcompat:upper()
-	--		v.compatlevel = tonumber(stdcompat:match("([0-9]+)$"))
-	--		v.flag = stdcompat:gsub("FREEBSD", "COMPAT")
-	--		v.prefix = stdcompat:lower() .. "_"
-	--		v.descr = stdcompat:lower()
-	--	end
-
-	--	local tmpname = "sys" .. v.flag:lower()
-	--	local dcltmpname = tmpname .. "dcl"
-	--	files[tmpname] = io.tmpfile()
-	--	files[dcltmpname] = io.tmpfile()
-	--	v.tmp = tmpname
-	--	v.dcltmp = dcltmpname
-
-	--	known_flags[v.flag] = nval
-	--	v.mask = nval
-	--	nval = nval << 1
-
-	--	v.count = 0
-	--end
+		-- Add compat option to syscall.known_flags
+	    table.insert(syscall.known_flags, v.flag)
+	end
 end
 
-function FreeBSDSyscall:parse_sysfile()
+function FreeBSDSyscall:parseSysfile()
 	local file = self.sysfile
 	local config = self.config
 	local commentExpr = "^%s*;.*"
+
+    -- Keep track of the system call numbers and make sure there's no skipped 
+    -- system calls.
+    local num = 0
 
 	if file == nil then
 		print "No file"
@@ -79,9 +61,9 @@ function FreeBSDSyscall:parse_sysfile()
 	local defs = ""
 	local s
 	for line in fh:lines() do
-		line = line:gsub(commentExpr, "")		-- Strip any comments
+		line = line:gsub(commentExpr, "") -- Strip any comments
 
-		-- Note can't use pure pattern matching here because of the 's' test
+		-- NOTE: Can't use pure pattern matching here because of the 's' test
 		-- and this is shorter than a generic pattern matching pattern
 		if line == nil or line == "" then
 			-- nothing blank line or end of file
@@ -113,7 +95,11 @@ function FreeBSDSyscall:parse_sysfile()
 			if s:add(line) then
 				-- append to syscall list
 				for t in s:iter() do
-					table.insert(self.syscalls, t)
+                    if t:validate(t.num - 1) then
+					    table.insert(self.syscalls, t)
+                    else
+                        util.abort(1, "Skipped system call at number " .. t.num)
+                    end
 				end
 				s = nil
             end
@@ -122,8 +108,6 @@ function FreeBSDSyscall:parse_sysfile()
 
     -- special handling for linux nosys
     if config.syscallprefix:find("LINUX") ~= nil then
-        -- xxx do more here? want to discuss, looks like we're currently 
-        -- skipping?
         s = nil
     end
 
@@ -140,8 +124,9 @@ function FreeBSDSyscall:new(obj)
 	obj = obj or { }
 	setmetatable(obj, self)
 	self.__index = self
-
-	obj:parse_sysfile()
+    
+    obj:processCompat()
+	obj:parseSysfile()
 
 	return obj
 end
