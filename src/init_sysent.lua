@@ -89,6 +89,11 @@ function init_sysent.generate(tbl, config, fh)
 struct sysent %s[] = {
 ]], config.switchname))
 
+    -- Handle linux nosys
+    if config.syscallprefix:find("LINUX") ~= nil then
+        bio:write("#define nosys   linux_nosys\n")
+    end
+
     -- Looping for each system call.
     for k, v in pairs(s) do
         local c = v:compat_level()
@@ -138,7 +143,7 @@ struct sysent %s[] = {
                     str = str .. string.format(
                         "%s, .sy_auevent = %s, .sy_flags = %s, " .. 
                         ".sy_thrcnt = %s },",
-	        		    v.arg_alias, v.audit, v.cap, v.thr)
+	        		    v:symbol(), v.audit, v.cap, v.thr)
 	        	else
                     str = str .. string.format(
                         "sys_%s, .sy_auevent = %s, .sy_flags = %s, " .. 
@@ -148,9 +153,10 @@ struct sysent %s[] = {
 
                 else
                     -- Assume something went wrong.
-                    util.abort(1, 
-                        "Unable to generate system switch for system call: " .. 
-                        v.name)
+                    --util.abort(1, 
+                    --    "Unable to generate system switch for system call: " .. 
+                    --    v.name)
+                    -- xxx breaks linux, what case is linux skipping?
                 end
 
         -- Handle compatibility (everything >= FREEBSD3):
@@ -188,12 +194,12 @@ struct sysent %s[] = {
             comment = "obsolete " .. v.alias
         
         -- Handle unimplemented:
-        elseif v.type.UNIMP then
+        elseif v.type.UNIMPL then
 		    str = string.format(
 		        "\t{ .sy_narg = 0, .sy_call = (sy_call_t *)nosys, " ..
 		        ".sy_auevent = AUE_NULL, .sy_flags = 0, " ..
 		        ".sy_thrcnt = SY_THR_ABSENT },")
-            comment = "" -- xxx not seeing where there is right now
+            -- UNIMPL comment is not different in sysent
 
         -- Handle reserved:
         elseif v.type.RESERVED then

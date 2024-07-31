@@ -218,10 +218,10 @@ function config.merge(fh)
                     -- match for pipe, that's how abi_flags is formatted
                     table.insert(config[k], util.setFromString(v, "[^|]+"))
                 elseif v:find("capenabled") or
-                        v:find("syscall_abi_change") or
-                        v:find("syscall_no_abi_change") or
-                        v:find("obsol") or
-                        v:find("unimpl") then
+                       v:find("syscall_abi_change") or
+                       v:find("syscall_no_abi_change") or
+                       v:find("obsol") or
+                       v:find("unimpl") then
                     -- match for space, that's how these are formatted
                     table.insert(config[k], util.setFromString(v, "[^ ]+"))
                 else

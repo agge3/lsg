@@ -27,6 +27,8 @@ if arg[0]:match("/") then
 	package.path = package.path .. ";" .. a .. "/?.lua"
 end
 
+local DataDumper = require("tools/DataDumper")
+
 -- The FreeBSD syscall generator
 local FreeBSDSyscall = require("freebsd-syscall")
 
@@ -79,7 +81,7 @@ function syscalls.generate(tbl, config, fh)
 			bio:write(string.format(
                 "\t\"#%d\",\t\t\t/* %d = reserved for local use */\n",
 	            v.num, v.num))
-		elseif v.type.UNIMP then
+		elseif v.type.UNIMPL then
             local comment = ""
             comment = v.name -- xxx this is sometimes different
 			bio:write(string.format("\t\"#%d\",\t\t\t/* %d = %s */\n",

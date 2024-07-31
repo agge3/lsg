@@ -132,10 +132,15 @@ function util.stripAbiPrefix(funcname, abiprefix)
 	return stripped_name
 end
 
+-- Returns the correct argsize. "0" unless there's arguments or NODEF flag.
 function util.processArgsize(syscall)
-    if syscall.arg_alias ~= nil then
-        if #syscall.args ~= 0 or syscall.type.NODEF then
+    if syscall.arg_alias ~= nil then 
+        if syscall.type.SYSMUX then
+            return "0"
+        elseif #syscall.args ~= 0 or syscall.type.NODEF then
             return "AS(" .. syscall.arg_alias .. ")"
+        else
+            return "0"
         end
     end
 
