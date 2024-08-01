@@ -64,13 +64,10 @@ end
 --
 function scarg:process()
     -- Much of this is identical to makesyscalls.lua
-    -- Notable changes are: using `self` for OOP, arg_abi_change is now (local)
-    -- abi_changes, and abi_changes is now global_changes_abi. There's also a
-    -- helper function mergeGlobal() to merge changes into the global config.
     if self.type ~= "" and self.name ~= "void" then
 		-- util.is64bitType() needs a bare type so check it after argname
 		-- is removed
-		self.global_changes_abi = config.abiChanges("pair_64bit") and 
+		self.changes_abi = config.abiChanges("pair_64bit") and 
                                   util.is64bitType(self.type)
 
 		self.type = self.type:gsub("intptr_t", config.abi_intptr_t)
@@ -101,9 +98,6 @@ function scarg:process()
 			self.type = self.type:gsub("(union [^ ]*)", "%1" ..
 			    config.abi_type_suffix)
 		end
-
-        -- Finally, merge any changes to the ABI into the global config.
-        self:mergeGlobal()
 
         return true
     end
@@ -183,12 +177,10 @@ function scarg:append(tbl)
     return false
 end
 
-function scarg:getArg()
-    return self.arg
+function scarg:changesAbi()
+    return self.changes_abi
 end
         
--- Default constructor. scarg HAS a finalizer procedure so MAKE SURE to nil the
--- reference.
 function scarg:new(obj, line)
 	obj = obj or { }
 	setmetatable(obj, self)
@@ -196,21 +188,13 @@ function scarg:new(obj, line)
     
     self.scarg = line
 	self.abi_changes = false
-    self.global_abi_changes = false
+    self.changes_abi = false
 
     self.arg = {}
 
     obj:init()
 
 	return obj
-end
-
--- Merge any changes to the ABI (changes from native) into the global config.
-function scarg:mergeGlobal()
-    if self.global_changes_abi then
-        -- xxx this is what we're intending to do here, right?
-        config.changes_abi = self.global_changes_abi
-    end
 end
 
 return scarg

@@ -77,8 +77,27 @@ end
 
 -- If there are ABI changes from native, process the system call to match the
 -- expected ABI.
-function syscall:processAbiChanges()
-    if config.changes_abi and self.name ~= nil then
+function syscall:processChangesAbi()
+    if config.syscall_no_abi_change[self.name] ~= nil then
+        self.changes_abi = false
+    end
+    if config.abiChanges("pointer_args") then
+        for _, v in ipairs(self.args) do
+            if util.isPtrType(v.type) then
+                if config.syscall_no_abi_change[self.name] ~= nil then
+        		    print("WARNING: " .. v.name ..
+					    " in syscall_no_abi_change, but pointers args are present")
+				end
+				self.changes_abi = true
+				goto ptrfound
+			end
+		end
+		::ptrfound::
+	end
+	if config.syscall_abi_change[self.name] ~= nil then
+		self.changes_abi = true
+	end
+    if self.changes_abi then
         -- argalias should be:
         --   COMPAT_PREFIX + ABI Prefix + funcname
     	self.arg_prefix = config.abi_func_prefix
@@ -223,7 +242,9 @@ function syscall:addArgs(line)
         if arg:process() then 
             arg:append(self.args)
         end
-        arg = nil -- nil the reference to trigger scarg's finalizer
+        -- Check if this argument has ABI changes from native for this system
+        -- call.
+        self.changes_abi = arg:changesAbi()
         return true
     end
     return false
@@ -234,6 +255,8 @@ end
 -- RETURN: TRUE, if added succesfully. FALSE (or ABORT), if not
 --
 function syscall:isAdded(line)
+    -- xxx keeping this below code temporarily because it's a much cleaner way
+    -- of going about it, but breaks in the control flow right now
     --
     -- Three cases:
     --  (1) This system call was a range of system calls - exit with specific 
@@ -271,6 +294,7 @@ function syscall:isAdded(line)
     --        return true
     --    end
     --end
+
     if self.expect_rbrace then
 	    if not line:match("}$") then
 	    	util.abort(1, "Expected '}' found '" .. line .. "' instead.")
@@ -284,33 +308,31 @@ end
 -- Once we have a good syscall, add some final information to it (based on how 
 -- it was instantiated).
 function syscall:finalize()
-    -- These may be changed by processAbiChanges(), or they'll remain empty for 
+    -- These may be changed by processChangesAbi(), or they'll remain empty for 
     -- native.
     self.prefix = ""
     self.arg_prefix = ""
+    self:processChangesAbi()
 
-    -- capability flag, if it was provided
-    self.cap = processCap(self.name, self.prefix, self.type)
-    -- thread flag, based on type(s) provided
-    self.thr = processThr(self.type)
-
-    self:processAbiChanges()
-
-    if self.name ~= nil then
-        self.name = self.prefix .. self.name
-    end
+    -- xxx revisit on if this bit can be done better, there might be redundancy
+    self.name = self.prefix .. self.name
     if self.alias == nil or self.alias == "" then
         self.alias = self.name
     end
 
     -- Handle argument(s) alias.
-    if self.arg_alias == nil and self.name ~= nil then
+    if self.arg_alias == nil then
         -- Symbol will either be: (native) the same as the system call name, or 
         -- (non-native) the correct modified symbol for the arg_alias
         self.arg_alias = self:symbol() .. "_args"
     elseif self.arg_alias ~= nil then 
         self.arg_alias = self.arg_prefix .. self.arg_alias
     end
+
+    -- capability flag, if it was provided
+    self.cap = processCap(self.name, self.prefix, self.type)
+    -- thread flag, based on type(s) provided
+    self.thr = processThr(self.type)
 end
 
 --
@@ -372,7 +394,7 @@ function syscall:new(obj)
 	setmetatable(obj, self)
 	self.__index = self
 
-    self.range = false
+    self.changes_abi = false
 
 	self.expect_rbrace = false
 	self.args = { }
