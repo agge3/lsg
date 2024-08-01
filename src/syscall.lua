@@ -364,7 +364,7 @@ end
 --
 function syscall:native()
     return self:compat_level() == native or self.name == "lkmnosys" or 
-           self.name == "nosys" or self.name == "sysarch"
+           self.name == "sysarch"
 end
 
 function syscall:new(obj)

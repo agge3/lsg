@@ -79,7 +79,7 @@ function syscall_h.generate(tbl, config, fh)
                 v.num, s, v.name))
 		elseif v.type.RESERVED then
 			bio:write(string.format("\t\t\t\t/* %d is reserved */\n", v.num))
-		elseif v.type.UNIMP then
+		elseif v.type.UNIMPL then
 			bio:write(string.format("\t\t\t\t/* %d is unimplemented %s */\n", 
                 v.num, v.name))
 		else -- do nothing
