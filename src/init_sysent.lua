@@ -93,7 +93,7 @@ struct sysent %s[] = {
     if config.syscallprefix:find("LINUX") ~= nil then
         bio:write("#define nosys   linux_nosys\n")
     end
-
+  
     -- Looping for each system call.
     for k, v in pairs(s) do
         local c = v:compat_level()

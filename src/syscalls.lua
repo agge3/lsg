@@ -27,8 +27,6 @@ if arg[0]:match("/") then
 	package.path = package.path .. ";" .. a .. "/?.lua"
 end
 
-local DataDumper = require("tools/DataDumper")
-
 -- The FreeBSD syscall generator
 local FreeBSDSyscall = require("freebsd-syscall")
 
