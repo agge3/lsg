@@ -1,26 +1,22 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
 -- Copyright (c) 2024 Tyler Baxter <agge@FreeBSD.org>
---
-
--- Derived in large part from makesyscalls.lua:
---
--- SPDX-License-Identifier: BSD-2-Clause-FreeBSD
---
+-- Copyright (c) 2023 Warner Losh <imp@bsdimp.com>
 -- Copyright (c) 2019 Kyle Evans <kevans@FreeBSD.org>
+--
 
-local syscall = require("syscall")
+local syscall = require("core.syscall")
+local util = require("tools.util")
 
 local FreeBSDSyscall = {}
 
 FreeBSDSyscall.__index = FreeBSDSyscall
 
--- Processes compatability options in the global config and inserts them into
--- known_flags to reference.
+-- For each compat option in the provided config table, process them and insert
+-- them into known_flags for class syscall.
 function FreeBSDSyscall:processCompat()
-	for _, v in pairs(config.compat_options) do
+	for _, v in pairs(self.config.compat_options) do
 		if v.stdcompat ~= nil then
 			local stdcompat = v.stdcompat
 			v.definition = "COMPAT_" .. stdcompat:upper()
@@ -30,7 +26,7 @@ function FreeBSDSyscall:processCompat()
 			v.descr = stdcompat:lower()
 		end
 
-		-- Add compat option to syscall.known_flags
+		-- Add compat option to syscall.known_flags.
 	    table.insert(syscall.known_flags, v.flag)
 	end
 end
@@ -40,45 +36,38 @@ function FreeBSDSyscall:parseSysfile()
 	local config = self.config
 	local commentExpr = "^%s*;.*"
 
-    -- Keep track of the system call numbers and make sure there's no skipped 
-    -- system calls.
-    local num = 0
-
 	if file == nil then
-		print "No file"
-		return
+		return nil, "No file given"
 	end
 
-	self.syscalls = { }
+	self.syscalls = {}
 
-	local fh = io.open(file)
+	local fh, msg = io.open(file)
 	if fh == nil then
-		print("Failed to open " .. file)
-		return {}
+		return nil, msg
 	end
 
 	local incs = ""
 	local defs = ""
 	local s
 	for line in fh:lines() do
-		line = line:gsub(commentExpr, "") -- Strip any comments
-
+		line = line:gsub(commentExpr, "") -- Strip any comments.
 		-- NOTE: Can't use pure pattern matching here because of the 's' test
 		-- and this is shorter than a generic pattern matching pattern
 		if line == nil or line == "" then
-			-- nothing blank line or end of file
-		elseif s ~= nil then
+            goto skip -- Blank line, skip this line.
+        elseif s ~= nil then
 			-- If we have a partial system call object
 			-- s, then feed it one more line
 			if s:add(line) then
-				-- append to syscall list
+				-- Append to system call list.
 				for t in s:iter() do
 					table.insert(self.syscalls, t)
 				end
 				s = nil
 			end
 		elseif line:match("^%s*%$") then
-			-- nothing, obsolete $FreeBSD$ thing
+			print("Obsolete $FreeBSD$ tag.") -- do nothing and print
 		elseif line:match("^#%s*include") then
 			incs = incs .. line .. "\n"
 		elseif line:match("%%ABI_HEADERS%%") then
@@ -93,13 +82,18 @@ function FreeBSDSyscall:parseSysfile()
 		else
 			s = syscall:new()
 			if s:add(line) then
-				-- append to syscall list
+				-- Append to system call list.
 				for t in s:iter() do
-					table.insert(self.syscalls, t)
+                    if t:validate(t.num - 1) then
+					    table.insert(self.syscalls, t)
+                    else
+                        util.abort(1, "Skipped system call at number " .. t.num)
+                    end
 				end
 				s = nil
             end
 		end
+        ::skip::
 	end
 
     -- special handling for linux nosys
@@ -111,16 +105,16 @@ function FreeBSDSyscall:parseSysfile()
 		util.abort(1, "Dangling system call at the end")
 	end
 
-	assert(io.close(fh))
+	assert(fh:close())
 	self.includes = incs
 	self.defines = defs
 end
 
 function FreeBSDSyscall:new(obj)
-	obj = obj or { }
+	obj = obj or {}
 	setmetatable(obj, self)
 	self.__index = self
-    
+
     obj:processCompat()
 	obj:parseSysfile()
 
