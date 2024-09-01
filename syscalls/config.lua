@@ -13,7 +13,8 @@
 -- was sourced in. This dodges the need to write a command line parser.
 --
 
-local util = require("tools/util")
+local util = require("tools.util")
+require("tools.DataDumper")
 
 --
 -- Global config map.
@@ -51,9 +52,11 @@ local config = {
 	mincompat = 0,
 	capenabled = {},
 	-- System calls that require ABI-specific handling
-	syscall_abi_change = {},
+	syscall_abi_change = "",
+	sys_abi_change = {},
 	-- System calls that appear to require handling, but don't
-	syscall_no_abi_change = {},
+	syscall_no_abi_change = "",
+	sys_no_abi_change = {},
 	-- Keep track of modifications if there are.
 	modifications = {},
 	-- Stores compat_sets from syscalls.conf; config.mergeCompat() instantiates.
@@ -203,16 +206,16 @@ function config.merge(fh)
         for k, v in pairs(res) do
             if v ~= config[k] then
                 -- handling of sets
-                if v:find("abi_flags") then
+                if k:find("abi_flags") then
                     -- match for pipe, that's how abi_flags is formatted
-                    table.insert(config[k], util.setFromString(v, "[^|]+"))
-                elseif v:find("capenabled") or
-                       v:find("syscall_abi_change") or
-                       v:find("syscall_no_abi_change") or
-                       v:find("obsol") or
-                       v:find("unimpl") then
+                    config[k] = util.setFromString(v, "[^|]+")
+                elseif k:find("capenabled") or
+                       k:find("sys_abi_change") or
+                       k:find("sys_no_abi_change") or
+                       k:find("obsol") or
+                       k:find("unimpl") then
                     -- match for space, that's how these are formatted
-                    table.insert(config[k], util.setFromString(v, "[^ ]+"))
+                    config[k] = util.setFromString(v, "[^ ]+")
                 else
                     config[k] = v
                 end

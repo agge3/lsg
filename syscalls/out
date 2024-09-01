@@ -1,0 +1,168 @@
+Obsolete $FreeBSD$ tag.
+found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct rusage *rusage
+found abi changes: 		    _Out_writes_bytes_opt_(bufsize) _Contains_long_ struct ostatfs *buf,
+found abi changes: 		    _Inout_opt_ _Contains_long_ptr_ caddr_t addr,
+found abi changes: 		    _Inout_ _Contains_ptr_ struct msghdr *msg,
+found abi changes: 		    _In_ _Contains_ptr_ const struct msghdr *msg,
+found abi changes: 		    _Out_ _Contains_timet_ struct ostat *ub
+found abi changes: 		    _Out_ _Contains_timet_ struct ostat *ub
+found abi changes: 		    _In_opt_ _Contains_ptr_ struct osigaction *nsa,
+found abi changes: 		    _Out_opt_ _Contains_ptr_ struct osigaction *osa
+found abi changes: 		    _In_opt_ _Contains_long_ptr_ const struct sigaltstack *ss,
+found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct sigaltstack *oss
+found abi changes: 		    _Inout_opt_ _Contains_long_ptr_ char *data
+found abi changes: 		    _In_z_ char **argv,
+found abi changes: 		    _In_z_ char **envv
+found abi changes: 		    _Out_ _Contains_timet_ struct ostat *sb
+found abi changes: 		    _Inout_opt_ size_t *size,
+found abi changes: 		    _In_ _Contains_timet_ const struct itimerval *itv,
+found abi changes: 		    _Out_opt_ _Contains_timet_ struct itimerval *oitv
+found abi changes: 		    _Out_ _Contains_timet_ struct itimerval *itv
+found abi changes: 		    _In_opt_ _Contains_long_timet_ struct timeval *tv
+found abi changes: 		    _In_opt_ _Contains_ptr_ struct sigvec *nsv,
+found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigvec *osv
+found abi changes: 		    _In_opt_ _Contains_ptr_ struct sigstack *nss,
+found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigstack *oss
+found abi changes: 		    _Inout_ _Contains_ptr_ struct omsghdr *msg,
+found abi changes: 		    _In_ _Contains_ptr_ const struct omsghdr *msg,
+found abi changes: 		    _Out_ _Contains_long_timet_ struct timeval *tp,
+found abi changes: 		    _Out_ _Contains_long_ struct rusage *rusage
+found abi changes: 		    _Inout_updates_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+found abi changes: 		    _In_reads_opt_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *tv,
+found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *tptr
+found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *delta,
+found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct timeval *olddelta
+found abi changes: 		    _In_reads_(addr_count) char **addrs
+found abi changes: 		    _Out_ long *basep
+found abi changes: 		    _Out_ _Contains_long_ struct ostatfs *buf
+found abi changes: 		    _Out_ _Contains_long_ struct ostatfs *buf
+found abi changes: 		    _Inout_ _Contains_long_ struct timex *tp
+found abi changes: 		    _Out_ _Contains_timet_ struct freebsd11_stat *ub
+found abi changes: 		    _Out_ _Contains_timet_ struct freebsd11_stat *sb
+found abi changes: 		    _Out_ _Contains_timet_ struct freebsd11_stat *ub
+found abi changes: 		    _Out_ long *basep
+found abi changes: 		    _Inout_opt_ size_t *oldlenp,
+found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timeval *tptr
+found abi changes: 		    _Contains_ptr_ union semun_old *arg
+found abi changes: 		    _Contains_long_ptr_timet_ struct msqid_ds_old *buf
+found abi changes: 		    _In_reads_bytes_(msgsz) _Contains_long_ const void *msgp,
+found abi changes: 		    _Out_writes_bytes_(msgsz) _Contains_long_ void *msgp,
+found abi changes: 		    _Inout_opt_ _Contains_long_ struct shmid_ds_old *buf
+found abi changes: 		    _Out_ _Contains_long_timet_ struct timespec *tp
+found abi changes: 		    _In_ _Contains_long_timet_ const struct timespec *tp
+found abi changes: 		    _Out_ _Contains_long_timet_ struct timespec *tp
+found abi changes: 		    _In_ _Contains_long_ptr_ struct sigevent *evp,
+found abi changes: 		    _In_ _Contains_long_timet_ const struct itimerspec *value,
+found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct itimerspec *ovalue
+found abi changes: 		    _Out_ _Contains_long_timet_ struct itimerspec *value
+found abi changes: 		    _In_ _Contains_long_timet_ const struct timespec *rqtp,
+found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct timespec *rmtp
+found abi changes: 		    _In_ _Contains_timet_ struct ffclock_estimate *cest
+found abi changes: 		    _Out_ _Contains_timet_ struct ffclock_estimate *cest
+found abi changes: 		    _In_ _Contains_long_timet_ const struct timespec *rqtp,
+found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct timespec *rmtp
+found abi changes: 		    _Out_ _Contains_long_timet_ struct ntptimeval *ntvp
+found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _Inout_updates_(nent) _Contains_long_ptr_ struct aiocb * const *acb_list,
+found abi changes: 		    _In_opt_ _Contains_long_ptr_ struct sigevent *sig
+found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *tptr
+found abi changes: 		    _Out_ _Contains_long_timet_ struct nstat *ub
+found abi changes: 		    _Out_ _Contains_long_timet_ struct nstat *sb
+found abi changes: 		    _Out_ _Contains_long_timet_ struct nstat *ub
+found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+found abi changes: 		    _Out_ _Contains_long_ struct ostatfs *buf
+found abi changes: 		    _Out_ _Contains_long_timet_ struct freebsd11_stat *sb
+found abi changes: 		    _Out_ _Contains_long_ struct module_stat *stat
+found abi changes: 		    _Out_ _Contains_long_ptr_ struct kld_file_stat *stat
+found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _Inout_updates_(nent) _Contains_long_ptr_ struct aiocb * const * aiocbp,
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+found abi changes: 		    _In_opt_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _Inout_ _Contains_long_ptr_ struct oaiocb *aiocbp
+found abi changes: 		    _Inout_ _Contains_long_ptr_ struct oaiocb *aiocbp
+found abi changes: 		    _Inout_updates_(nent) _Contains_long_ptr_ struct oaiocb * const *acb_list,
+found abi changes: 		    _In_opt_ _Contains_ptr_ struct osigevent *sig
+found abi changes: 		    _Out_ _Contains_long_timet_ struct timespec *interval
+found abi changes: 		    _In_opt_ _Contains_ptr_ struct sf_hdtr *hdtr,
+found abi changes: 		    _In_ _Contains_long_ptr_ void *data
+found abi changes: 		    _In_ _Contains_ptr_ struct jail *jail
+found abi changes: 		    _In_opt_ _Contains_ptr_ const struct sigaction *act,
+found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigaction *oact
+found abi changes: 		    _In_ _Contains_long_ptr_ const struct freebsd4_ucontext *sigcntxp
+found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info,
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info
+found abi changes: 		    _Outptr_result_maybenull_ struct aiocb **aiocbp,
+found abi changes: 		    _In_opt_ _Contains_long_timet_ struct timespec *timeout
+found abi changes: 		    _In_reads_opt_(nchanges) _Contains_ptr_ const struct freebsd11_kevent *changelist,
+found abi changes: 		    _Out_writes_opt_(nevents) _Contains_ptr_ struct freebsd11_kevent *eventlist,
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_opt_ _Contains_ptr_ struct sf_hdtr *hdtr,
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_ char **argv,
+found abi changes: 		    _In_ char **envv,
+found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
+found abi changes: 		    _In_opt_ _Contains_ptr_ const struct sigaction *act,
+found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigaction *oact
+found abi changes: 		    _In_ _Contains_long_ptr_ const struct __ucontext *sigcntxp
+found abi changes: 		    _Out_ _Contains_long_ptr_ struct __ucontext *ucp
+found abi changes: 		    _In_ _Contains_long_ptr_ const struct __ucontext *ucp
+found abi changes: 		    _Out_ _Contains_long_ptr_ struct __ucontext *oucp,
+found abi changes: 		    _In_ _Contains_long_ptr_ const struct __ucontext *ucp
+found abi changes: 		    _In_ _Contains_long_ptr_ ucontext_t *ctx,
+found abi changes: 		    _Out_ long *id,
+found abi changes: 		    _Out_opt_ long *state
+found abi changes: 		    _Out_ long *id
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *abstime
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+found abi changes: 		    _In_ _Contains_long_ptr_ struct thr_param *param,
+found abi changes: 		    _In_opt_ _Contains_long_ const struct mq_attr *attr
+found abi changes: 		    _In_opt_ _Contains_long_ const struct mq_attr *attr,
+found abi changes: 		    _Out_opt_ _Contains_long_ struct mq_attr *oattr
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *abs_timeout
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *abs_timeout
+found abi changes: 		    _In_opt_ _Contains_long_ptr_ const struct sigevent *sigev
+found abi changes: 		    _In_reads_(nargs) void **args
+found abi changes: 		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _In_reads_(iovlen) _Contains_long_ptr_ struct iovec *iov,
+found abi changes: 		    _In_reads_(iovlen) _Contains_long_ptr_ struct iovec *iov,
+found abi changes: 		    _In_ char **argv,
+found abi changes: 		    _In_ char **envv
+found abi changes: 		    _Out_ _Contains_long_timet_ struct freebsd11_stat *buf,
+found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timeval *times
+found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+found abi changes: 		    _Inout_ _Contains_ptr_ union semun *arg
+found abi changes: 		    _Inout_opt_ _Contains_long_ptr_ struct msqid_ds *buf
+found abi changes: 		    _Inout_opt_ _Contains_long_ struct shmid_ds *buf
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *ts,
+found abi changes: 		    _Out_opt_ _Contains_long_ struct __wrusage *wrusage,
+found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info
+found abi changes: 		    _In_reads_(ncmds) const u_long *cmds,
+found abi changes: 		    _Out_writes_(maxcmds) u_long *cmds,
+found abi changes: 		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *ts,
+found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timespec *times
+found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timespec *times,
+found abi changes: 		    _Out_ _Contains_long_timet_ struct stat *sb
+found abi changes: 		    _Out_ _Contains_long_timet_ struct stat *buf,
+found abi changes: 		    _Out_ _Contains_long_timet_ struct stat *sb
+found abi changes: 		    _In_reads_opt_(nchanges) _Contains_ptr_ const struct kevent *changelist,
+found abi changes: 		    _Out_writes_opt_(nevents) _Contains_ptr_ struct kevent *eventlist,
+found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+found abi changes: 		    _Inout_opt_ size_t *oldlenp,
+found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp

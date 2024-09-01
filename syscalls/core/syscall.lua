@@ -80,35 +80,55 @@ function syscall:validate(prev)
     return prev + 1 == self.num
 end
 
+function syscall:processSyscallAbiChange()
+	local changes_abi = config.syscall_abi_change
+	for syscall in changes_abi:gmatch("([^ ]+)") do
+		config.sys_abi_change[syscall] = true
+	end
+
+	local no_changes = config.syscall_no_abi_change
+	for syscall in no_changes:gmatch("([^ ]+)") do
+		config.sys_no_abi_change[syscall] = true
+	end
+end
+
 -- If there are ABI changes from native, process this system call to match the
 -- target ABI.
 -- RETURN: TRUE if any modifications were done. FALSE if no modifications were
 -- done
 function syscall:processChangesAbi()
     -- First, confirm we want to uphold our changes_abi flag.
-    if config.syscall_no_abi_change[self.name] then
+    if config.sys_no_abi_change[self.name] then
         self.changes_abi = false
     end
     if config.abiChanges("pointer_args") then
         for _, v in ipairs(self.args) do
             if util.isPtrType(v.type) then
-                if config.syscall_no_abi_change[self.name] then
+                if config.sys_no_abi_change[self.name] then
                     print("WARNING: " .. self.name ..
                         " in syscall_no_abi_change, but pointers args are present")
                 end
                 self.changes_abi = true
-                break
+                goto ptrfound
             end
 	    end
+		::ptrfound::
     end
+	if config.sys_abi_change[self.name] then
+		self.changes_abi = true
+	end
 
     -- If there are ABI changes from native:
     if self.changes_abi then
+		--print("in changes abi")
         -- argalias should be:
         --   COMPAT_PREFIX + ABI Prefix + funcname
         self.arg_prefix = config.abi_func_prefix
+		--print("arg prefix: " .. self.arg_prefix)
         self.prefix = config.abi_func_prefix
+		--print("func prefix: " .. self.prefix)
         self.alias = self.prefix .. self.name
+		--print("alias: " .. self.alias)
         return true
     end
     return false
@@ -278,9 +298,9 @@ function syscall:finalize()
 
     -- An empty string would not want a prefix; in that case we want to keep the
     -- empty string.
-    --if self.name ~= nil and self.name ~= "" then
-    --    self.name = self.prefix .. self.name
-    --end
+    if self.name ~= nil and self.name ~= "" then
+        self.name = self.prefix .. self.name
+    end
     if self.alias == nil or self.alias == "" then
         self.alias = self.name
     end
@@ -429,6 +449,8 @@ function syscall:new(obj)
 	self.expect_rbrace = false
     self.changes_abi = false
 	self.args = {}
+
+	self.processSyscallAbiChange()
 
 	return obj
 end
