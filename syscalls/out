@@ -1,168 +1,1130 @@
 Obsolete $FreeBSD$ tag.
-found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct rusage *rusage
-found abi changes: 		    _Out_writes_bytes_opt_(bufsize) _Contains_long_ struct ostatfs *buf,
-found abi changes: 		    _Inout_opt_ _Contains_long_ptr_ caddr_t addr,
-found abi changes: 		    _Inout_ _Contains_ptr_ struct msghdr *msg,
-found abi changes: 		    _In_ _Contains_ptr_ const struct msghdr *msg,
-found abi changes: 		    _Out_ _Contains_timet_ struct ostat *ub
-found abi changes: 		    _Out_ _Contains_timet_ struct ostat *ub
-found abi changes: 		    _In_opt_ _Contains_ptr_ struct osigaction *nsa,
-found abi changes: 		    _Out_opt_ _Contains_ptr_ struct osigaction *osa
-found abi changes: 		    _In_opt_ _Contains_long_ptr_ const struct sigaltstack *ss,
-found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct sigaltstack *oss
-found abi changes: 		    _Inout_opt_ _Contains_long_ptr_ char *data
-found abi changes: 		    _In_z_ char **argv,
-found abi changes: 		    _In_z_ char **envv
-found abi changes: 		    _Out_ _Contains_timet_ struct ostat *sb
-found abi changes: 		    _Inout_opt_ size_t *size,
-found abi changes: 		    _In_ _Contains_timet_ const struct itimerval *itv,
-found abi changes: 		    _Out_opt_ _Contains_timet_ struct itimerval *oitv
-found abi changes: 		    _Out_ _Contains_timet_ struct itimerval *itv
-found abi changes: 		    _In_opt_ _Contains_long_timet_ struct timeval *tv
-found abi changes: 		    _In_opt_ _Contains_ptr_ struct sigvec *nsv,
-found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigvec *osv
-found abi changes: 		    _In_opt_ _Contains_ptr_ struct sigstack *nss,
-found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigstack *oss
-found abi changes: 		    _Inout_ _Contains_ptr_ struct omsghdr *msg,
-found abi changes: 		    _In_ _Contains_ptr_ const struct omsghdr *msg,
-found abi changes: 		    _Out_ _Contains_long_timet_ struct timeval *tp,
-found abi changes: 		    _Out_ _Contains_long_ struct rusage *rusage
-found abi changes: 		    _Inout_updates_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
-found abi changes: 		    _In_reads_opt_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
-found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *tv,
-found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *tptr
-found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *delta,
-found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct timeval *olddelta
-found abi changes: 		    _In_reads_(addr_count) char **addrs
-found abi changes: 		    _Out_ long *basep
-found abi changes: 		    _Out_ _Contains_long_ struct ostatfs *buf
-found abi changes: 		    _Out_ _Contains_long_ struct ostatfs *buf
-found abi changes: 		    _Inout_ _Contains_long_ struct timex *tp
-found abi changes: 		    _Out_ _Contains_timet_ struct freebsd11_stat *ub
-found abi changes: 		    _Out_ _Contains_timet_ struct freebsd11_stat *sb
-found abi changes: 		    _Out_ _Contains_timet_ struct freebsd11_stat *ub
-found abi changes: 		    _Out_ long *basep
-found abi changes: 		    _Inout_opt_ size_t *oldlenp,
-found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timeval *tptr
-found abi changes: 		    _Contains_ptr_ union semun_old *arg
-found abi changes: 		    _Contains_long_ptr_timet_ struct msqid_ds_old *buf
-found abi changes: 		    _In_reads_bytes_(msgsz) _Contains_long_ const void *msgp,
-found abi changes: 		    _Out_writes_bytes_(msgsz) _Contains_long_ void *msgp,
-found abi changes: 		    _Inout_opt_ _Contains_long_ struct shmid_ds_old *buf
-found abi changes: 		    _Out_ _Contains_long_timet_ struct timespec *tp
-found abi changes: 		    _In_ _Contains_long_timet_ const struct timespec *tp
-found abi changes: 		    _Out_ _Contains_long_timet_ struct timespec *tp
-found abi changes: 		    _In_ _Contains_long_ptr_ struct sigevent *evp,
-found abi changes: 		    _In_ _Contains_long_timet_ const struct itimerspec *value,
-found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct itimerspec *ovalue
-found abi changes: 		    _Out_ _Contains_long_timet_ struct itimerspec *value
-found abi changes: 		    _In_ _Contains_long_timet_ const struct timespec *rqtp,
-found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct timespec *rmtp
-found abi changes: 		    _In_ _Contains_timet_ struct ffclock_estimate *cest
-found abi changes: 		    _Out_ _Contains_timet_ struct ffclock_estimate *cest
-found abi changes: 		    _In_ _Contains_long_timet_ const struct timespec *rqtp,
-found abi changes: 		    _Out_opt_ _Contains_long_timet_ struct timespec *rmtp
-found abi changes: 		    _Out_ _Contains_long_timet_ struct ntptimeval *ntvp
-found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _Inout_updates_(nent) _Contains_long_ptr_ struct aiocb * const *acb_list,
-found abi changes: 		    _In_opt_ _Contains_long_ptr_ struct sigevent *sig
-found abi changes: 		    _In_ _Contains_long_timet_ const struct timeval *tptr
-found abi changes: 		    _Out_ _Contains_long_timet_ struct nstat *ub
-found abi changes: 		    _Out_ _Contains_long_timet_ struct nstat *sb
-found abi changes: 		    _Out_ _Contains_long_timet_ struct nstat *ub
-found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
-found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
-found abi changes: 		    _Out_ _Contains_long_ struct ostatfs *buf
-found abi changes: 		    _Out_ _Contains_long_timet_ struct freebsd11_stat *sb
-found abi changes: 		    _Out_ _Contains_long_ struct module_stat *stat
-found abi changes: 		    _Out_ _Contains_long_ptr_ struct kld_file_stat *stat
-found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _Inout_updates_(nent) _Contains_long_ptr_ struct aiocb * const * aiocbp,
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
-found abi changes: 		    _In_opt_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _Inout_ _Contains_long_ptr_ struct oaiocb *aiocbp
-found abi changes: 		    _Inout_ _Contains_long_ptr_ struct oaiocb *aiocbp
-found abi changes: 		    _Inout_updates_(nent) _Contains_long_ptr_ struct oaiocb * const *acb_list,
-found abi changes: 		    _In_opt_ _Contains_ptr_ struct osigevent *sig
-found abi changes: 		    _Out_ _Contains_long_timet_ struct timespec *interval
-found abi changes: 		    _In_opt_ _Contains_ptr_ struct sf_hdtr *hdtr,
-found abi changes: 		    _In_ _Contains_long_ptr_ void *data
-found abi changes: 		    _In_ _Contains_ptr_ struct jail *jail
-found abi changes: 		    _In_opt_ _Contains_ptr_ const struct sigaction *act,
-found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigaction *oact
-found abi changes: 		    _In_ _Contains_long_ptr_ const struct freebsd4_ucontext *sigcntxp
-found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info,
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
-found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info
-found abi changes: 		    _Outptr_result_maybenull_ struct aiocb **aiocbp,
-found abi changes: 		    _In_opt_ _Contains_long_timet_ struct timespec *timeout
-found abi changes: 		    _In_reads_opt_(nchanges) _Contains_ptr_ const struct freebsd11_kevent *changelist,
-found abi changes: 		    _Out_writes_opt_(nevents) _Contains_ptr_ struct freebsd11_kevent *eventlist,
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
-found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_opt_ _Contains_ptr_ struct sf_hdtr *hdtr,
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_ char **argv,
-found abi changes: 		    _In_ char **envv,
-found abi changes: 		    _In_ _Contains_long_ptr_ struct mac *mac_p
-found abi changes: 		    _In_opt_ _Contains_ptr_ const struct sigaction *act,
-found abi changes: 		    _Out_opt_ _Contains_ptr_ struct sigaction *oact
-found abi changes: 		    _In_ _Contains_long_ptr_ const struct __ucontext *sigcntxp
-found abi changes: 		    _Out_ _Contains_long_ptr_ struct __ucontext *ucp
-found abi changes: 		    _In_ _Contains_long_ptr_ const struct __ucontext *ucp
-found abi changes: 		    _Out_ _Contains_long_ptr_ struct __ucontext *oucp,
-found abi changes: 		    _In_ _Contains_long_ptr_ const struct __ucontext *ucp
-found abi changes: 		    _In_ _Contains_long_ptr_ ucontext_t *ctx,
-found abi changes: 		    _Out_ long *id,
-found abi changes: 		    _Out_opt_ long *state
-found abi changes: 		    _Out_ long *id
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *abstime
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
-found abi changes: 		    _In_ _Contains_long_ptr_ struct thr_param *param,
-found abi changes: 		    _In_opt_ _Contains_long_ const struct mq_attr *attr
-found abi changes: 		    _In_opt_ _Contains_long_ const struct mq_attr *attr,
-found abi changes: 		    _Out_opt_ _Contains_long_ struct mq_attr *oattr
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *abs_timeout
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *abs_timeout
-found abi changes: 		    _In_opt_ _Contains_long_ptr_ const struct sigevent *sigev
-found abi changes: 		    _In_reads_(nargs) void **args
-found abi changes: 		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _In_reads_(iovlen) _Contains_long_ptr_ struct iovec *iov,
-found abi changes: 		    _In_reads_(iovlen) _Contains_long_ptr_ struct iovec *iov,
-found abi changes: 		    _In_ char **argv,
-found abi changes: 		    _In_ char **envv
-found abi changes: 		    _Out_ _Contains_long_timet_ struct freebsd11_stat *buf,
-found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timeval *times
-found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
-found abi changes: 		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
-found abi changes: 		    _Inout_ _Contains_ptr_ union semun *arg
-found abi changes: 		    _Inout_opt_ _Contains_long_ptr_ struct msqid_ds *buf
-found abi changes: 		    _Inout_opt_ _Contains_long_ struct shmid_ds *buf
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *ts,
-found abi changes: 		    _Out_opt_ _Contains_long_ struct __wrusage *wrusage,
-found abi changes: 		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info
-found abi changes: 		    _In_reads_(ncmds) const u_long *cmds,
-found abi changes: 		    _Out_writes_(maxcmds) u_long *cmds,
-found abi changes: 		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *ts,
-found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timespec *times
-found abi changes: 		    _In_reads_(2) _Contains_long_timet_ const struct timespec *times,
-found abi changes: 		    _Out_ _Contains_long_timet_ struct stat *sb
-found abi changes: 		    _Out_ _Contains_long_timet_ struct stat *buf,
-found abi changes: 		    _Out_ _Contains_long_timet_ struct stat *sb
-found abi changes: 		    _In_reads_opt_(nchanges) _Contains_ptr_ const struct kevent *changelist,
-found abi changes: 		    _Out_writes_opt_(nevents) _Contains_ptr_ struct kevent *eventlist,
-found abi changes: 		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
-found abi changes: 		    _Inout_opt_ size_t *oldlenp,
-found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
-found abi changes: 		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: syscall
+arg alias: syscall_args
+name: exit
+arg alias: exit_args
+name: fork
+arg alias: fork_args
+name: read
+arg alias: read_args
+name: write
+arg alias: write_args
+name: open
+arg alias: open_args
+name: close
+arg alias: close_args
+		    _Out_opt_ _Contains_long_timet_ struct rusage *rusage
+name: freebsd32_wait4
+arg alias: freebsd32_wait4_args
+name: creat
+arg alias: ocreat_args
+name: link
+arg alias: link_args
+name: unlink
+arg alias: unlink_args
+name: chdir
+arg alias: chdir_args
+name: fchdir
+arg alias: fchdir_args
+name: mknod
+arg alias: freebsd11_mknod_args
+name: chmod
+arg alias: chmod_args
+name: chown
+arg alias: chown_args
+name: break
+arg alias: break_args
+		    _Out_writes_bytes_opt_(bufsize) _Contains_long_ struct ostatfs *buf,
+name: getfsstat
+arg alias: freebsd4_getfsstat_args
+name: lseek
+arg alias: olseek_args
+name: getpid
+arg alias: getpid_args
+name: mount
+arg alias: mount_args
+name: unmount
+arg alias: unmount_args
+name: setuid
+arg alias: setuid_args
+name: getuid
+arg alias: getuid_args
+name: geteuid
+arg alias: geteuid_args
+		    _Inout_opt_ _Contains_long_ptr_ caddr_t addr,
+name: ptrace
+arg alias: ptrace_args
+		    _Inout_ _Contains_ptr_ struct msghdr *msg,
+name: recvmsg
+arg alias: recvmsg_args
+		    _In_ _Contains_ptr_ const struct msghdr *msg,
+name: sendmsg
+arg alias: sendmsg_args
+name: recvfrom
+arg alias: recvfrom_args
+name: accept
+arg alias: accept_args
+name: getpeername
+arg alias: getpeername_args
+name: getsockname
+arg alias: getsockname_args
+name: access
+arg alias: access_args
+name: chflags
+arg alias: chflags_args
+name: fchflags
+arg alias: fchflags_args
+name: sync
+arg alias: sync_args
+name: kill
+arg alias: kill_args
+		    _Out_ _Contains_timet_ struct ostat *ub
+name: freebsd32_stat
+arg alias: ofreebsd32_stat_args
+name: getppid
+arg alias: getppid_args
+		    _Out_ _Contains_timet_ struct ostat *ub
+name: freebsd32_lstat
+arg alias: ofreebsd32_lstat_args
+name: dup
+arg alias: dup_args
+name: pipe
+arg alias: freebsd10_pipe_args
+name: getegid
+arg alias: getegid_args
+name: profil
+arg alias: profil_args
+name: ktrace
+arg alias: ktrace_args
+		    _In_opt_ _Contains_ptr_ struct osigaction *nsa,
+		    _Out_opt_ _Contains_ptr_ struct osigaction *osa
+name: freebsd32_sigaction
+arg alias: ofreebsd32_sigaction_args
+name: getgid
+arg alias: getgid_args
+name: sigprocmask
+arg alias: osigprocmask_args
+name: getlogin
+arg alias: getlogin_args
+name: setlogin
+arg alias: setlogin_args
+name: acct
+arg alias: acct_args
+name: sigpending
+arg alias: osigpending_args
+		    _In_opt_ _Contains_long_ptr_ const struct sigaltstack *ss,
+		    _Out_opt_ _Contains_long_ptr_ struct sigaltstack *oss
+name: freebsd32_sigaltstack
+arg alias: freebsd32_sigaltstack_args
+		    _Inout_opt_ _Contains_long_ptr_ char *data
+name: freebsd32_ioctl
+arg alias: freebsd32_ioctl_args
+name: reboot
+arg alias: reboot_args
+name: revoke
+arg alias: revoke_args
+name: symlink
+arg alias: symlink_args
+name: readlink
+arg alias: readlink_args
+		    _In_z_ char **argv,
+		    _In_z_ char **envv
+name: freebsd32_execve
+arg alias: freebsd32_execve_args
+name: umask
+arg alias: umask_args
+name: chroot
+arg alias: chroot_args
+		    _Out_ _Contains_timet_ struct ostat *sb
+name: freebsd32_fstat
+arg alias: ofreebsd32_fstat_args
+		    _Inout_opt_ size_t *size,
+name: getkerninfo
+arg alias: ogetkerninfo_args
+name: getpagesize
+arg alias: ogetpagesize_args
+name: msync
+arg alias: msync_args
+name: vfork
+arg alias: vfork_args
+name: sbrk
+arg alias: sbrk_args
+name: sstk
+arg alias: sstk_args
+name: mmap
+arg alias: ommap_args
+name: vadvise
+arg alias: freebsd11_vadvise_args
+name: munmap
+arg alias: munmap_args
+name: freebsd32_mprotect
+arg alias: freebsd32_mprotect_args
+name: madvise
+arg alias: madvise_args
+name: mincore
+arg alias: mincore_args
+name: getgroups
+arg alias: getgroups_args
+name: setgroups
+arg alias: setgroups_args
+name: getpgrp
+arg alias: getpgrp_args
+name: setpgid
+arg alias: setpgid_args
+		    _In_ _Contains_timet_ const struct itimerval *itv,
+		    _Out_opt_ _Contains_timet_ struct itimerval *oitv
+name: freebsd32_setitimer
+arg alias: freebsd32_setitimer_args
+name: wait
+arg alias: owait_args
+name: swapon
+arg alias: swapon_args
+		    _Out_ _Contains_timet_ struct itimerval *itv
+name: freebsd32_getitimer
+arg alias: freebsd32_getitimer_args
+name: gethostname
+arg alias: ogethostname_args
+name: sethostname
+arg alias: osethostname_args
+name: getdtablesize
+arg alias: getdtablesize_args
+name: dup2
+arg alias: dup2_args
+name: freebsd32_fcntl
+arg alias: freebsd32_fcntl_args
+		    _In_opt_ _Contains_long_timet_ struct timeval *tv
+name: freebsd32_select
+arg alias: freebsd32_select_args
+name: fsync
+arg alias: fsync_args
+name: setpriority
+arg alias: setpriority_args
+name: socket
+arg alias: socket_args
+name: connect
+arg alias: connect_args
+name: accept
+arg alias: oaccept_args
+name: getpriority
+arg alias: getpriority_args
+name: send
+arg alias: osend_args
+name: recv
+arg alias: orecv_args
+name: freebsd32_sigreturn
+arg alias: ofreebsd32_sigreturn_args
+name: bind
+arg alias: bind_args
+name: setsockopt
+arg alias: setsockopt_args
+name: listen
+arg alias: listen_args
+		    _In_opt_ _Contains_ptr_ struct sigvec *nsv,
+		    _Out_opt_ _Contains_ptr_ struct sigvec *osv
+name: freebsd32_sigvec
+arg alias: ofreebsd32_sigvec_args
+name: sigblock
+arg alias: osigblock_args
+name: sigsetmask
+arg alias: osigsetmask_args
+name: sigsuspend
+arg alias: osigsuspend_args
+		    _In_opt_ _Contains_ptr_ struct sigstack *nss,
+		    _Out_opt_ _Contains_ptr_ struct sigstack *oss
+name: freebsd32_sigstack
+arg alias: ofreebsd32_sigstack_args
+		    _Inout_ _Contains_ptr_ struct omsghdr *msg,
+name: recvmsg
+arg alias: orecvmsg_args
+		    _In_ _Contains_ptr_ const struct omsghdr *msg,
+name: sendmsg
+arg alias: osendmsg_args
+		    _Out_ _Contains_long_timet_ struct timeval *tp,
+name: gettimeofday
+arg alias: gettimeofday_args
+		    _Out_ _Contains_long_ struct rusage *rusage
+name: freebsd32_getrusage
+arg alias: freebsd32_getrusage_args
+name: getsockopt
+arg alias: getsockopt_args
+		    _Inout_updates_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+name: readv
+arg alias: readv_args
+		    _In_reads_opt_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+name: writev
+arg alias: writev_args
+		    _In_ _Contains_long_timet_ const struct timeval *tv,
+name: settimeofday
+arg alias: settimeofday_args
+name: fchown
+arg alias: fchown_args
+name: fchmod
+arg alias: fchmod_args
+name: recvfrom
+arg alias: orecvfrom_args
+name: setreuid
+arg alias: setreuid_args
+name: setregid
+arg alias: setregid_args
+name: rename
+arg alias: rename_args
+name: truncate
+arg alias: otruncate_args
+name: ftruncate
+arg alias: oftruncate_args
+name: flock
+arg alias: flock_args
+name: mkfifo
+arg alias: mkfifo_args
+name: sendto
+arg alias: sendto_args
+name: shutdown
+arg alias: shutdown_args
+name: socketpair
+arg alias: socketpair_args
+name: mkdir
+arg alias: mkdir_args
+name: rmdir
+arg alias: rmdir_args
+		    _In_ _Contains_long_timet_ const struct timeval *tptr
+name: freebsd32_utimes
+arg alias: freebsd32_utimes_args
+		    _In_ _Contains_long_timet_ const struct timeval *delta,
+		    _Out_opt_ _Contains_long_timet_ struct timeval *olddelta
+name: freebsd32_adjtime
+arg alias: freebsd32_adjtime_args
+name: getpeername
+arg alias: ogetpeername_args
+name: gethostid
+arg alias: ogethostid_args
+name: sethostid
+arg alias: osethostid_args
+name: getrlimit
+arg alias: ogetrlimit_args
+name: setrlimit
+arg alias: osetrlimit_args
+name: killpg
+arg alias: okillpg_args
+name: setsid
+arg alias: setsid_args
+name: quotactl
+arg alias: quotactl_args
+name: quota
+arg alias: oquota_args
+name: getsockname
+arg alias: ogetsockname_args
+		    _In_reads_(addr_count) char **addrs
+name: freebsd32_nlm_syscall
+arg alias: freebsd32_nlm_syscall_args
+name: nfssvc
+arg alias: nfssvc_args
+		    _Out_ long *basep
+name: freebsd32_getdirentries
+arg alias: ofreebsd32_getdirentries_args
+		    _Out_ _Contains_long_ struct ostatfs *buf
+name: freebsd32_statfs
+arg alias: freebsd4_freebsd32_statfs_args
+		    _Out_ _Contains_long_ struct ostatfs *buf
+name: freebsd32_fstatfs
+arg alias: freebsd4_freebsd32_fstatfs_args
+name: lgetfh
+arg alias: lgetfh_args
+name: getfh
+arg alias: getfh_args
+name: getdomainname
+arg alias: freebsd4_getdomainname_args
+name: setdomainname
+arg alias: freebsd4_setdomainname_args
+name: uname
+arg alias: freebsd4_uname_args
+name: freebsd32_sysarch
+arg alias: freebsd32_sysarch_args
+name: rtprio
+arg alias: rtprio_args
+name: freebsd32_semsys
+arg alias: freebsd32_semsys_args
+name: freebsd32_msgsys
+arg alias: freebsd32_msgsys_args
+name: freebsd32_shmsys
+arg alias: freebsd32_shmsys_args
+name: freebsd32_pread
+arg alias: freebsd6_freebsd32_pread_args
+name: freebsd32_pwrite
+arg alias: freebsd6_freebsd32_pwrite_args
+name: setfib
+arg alias: setfib_args
+		    _Inout_ _Contains_long_ struct timex *tp
+name: freebsd32_ntp_adjtime
+arg alias: freebsd32_ntp_adjtime_args
+name: setgid
+arg alias: setgid_args
+name: setegid
+arg alias: setegid_args
+name: seteuid
+arg alias: seteuid_args
+		    _Out_ _Contains_timet_ struct freebsd11_stat *ub
+name: freebsd32_stat
+arg alias: freebsd11_freebsd32_stat_args
+		    _Out_ _Contains_timet_ struct freebsd11_stat *sb
+name: freebsd32_fstat
+arg alias: freebsd11_freebsd32_fstat_args
+		    _Out_ _Contains_timet_ struct freebsd11_stat *ub
+name: freebsd32_lstat
+arg alias: freebsd11_freebsd32_lstat_args
+name: pathconf
+arg alias: pathconf_args
+name: fpathconf
+arg alias: fpathconf_args
+name: getrlimit
+arg alias: getrlimit_args
+name: setrlimit
+arg alias: setrlimit_args
+		    _Out_ long *basep
+name: freebsd32_getdirentries
+arg alias: freebsd11_freebsd32_getdirentries_args
+name: freebsd32_mmap
+arg alias: freebsd6_freebsd32_mmap_args
+name: __syscall
+arg alias: __syscall_args
+name: lseek
+arg alias: freebsd6_lseek_args
+name: freebsd32_truncate
+arg alias: freebsd6_freebsd32_truncate_args
+name: freebsd32_ftruncate
+arg alias: freebsd6_freebsd32_ftruncate_args
+		    _Inout_opt_ size_t *oldlenp,
+name: __sysctl
+arg alias: __sysctl_args
+name: mlock
+arg alias: mlock_args
+name: munlock
+arg alias: munlock_args
+name: undelete
+arg alias: undelete_args
+		    _In_reads_(2) _Contains_long_timet_ const struct timeval *tptr
+name: freebsd32_futimes
+arg alias: freebsd32_futimes_args
+name: getpgid
+arg alias: getpgid_args
+name: poll
+arg alias: poll_args
+		    _Contains_ptr_ union semun_old *arg
+name: freebsd32___semctl
+arg alias: freebsd7_freebsd32___semctl_args
+name: semget
+arg alias: semget_args
+name: semop
+arg alias: semop_args
+		    _Contains_long_ptr_timet_ struct msqid_ds_old *buf
+name: freebsd32_msgctl
+arg alias: freebsd7_freebsd32_msgctl_args
+name: msgget
+arg alias: msgget_args
+		    _In_reads_bytes_(msgsz) _Contains_long_ const void *msgp,
+name: msgsnd
+arg alias: msgsnd_args
+		    _Out_writes_bytes_(msgsz) _Contains_long_ void *msgp,
+name: msgrcv
+arg alias: msgrcv_args
+name: shmat
+arg alias: shmat_args
+		    _Inout_opt_ _Contains_long_ struct shmid_ds_old *buf
+name: freebsd32_shmctl
+arg alias: freebsd7_freebsd32_shmctl_args
+name: shmdt
+arg alias: shmdt_args
+name: shmget
+arg alias: shmget_args
+		    _Out_ _Contains_long_timet_ struct timespec *tp
+name: freebsd32_clock_gettime
+arg alias: freebsd32_clock_gettime_args
+		    _In_ _Contains_long_timet_ const struct timespec *tp
+name: freebsd32_clock_settime
+arg alias: freebsd32_clock_settime_args
+		    _Out_ _Contains_long_timet_ struct timespec *tp
+name: freebsd32_clock_getres
+arg alias: freebsd32_clock_getres_args
+		    _In_ _Contains_long_ptr_ struct sigevent *evp,
+name: ktimer_create
+arg alias: ktimer_create_args
+name: ktimer_delete
+arg alias: ktimer_delete_args
+		    _In_ _Contains_long_timet_ const struct itimerspec *value,
+		    _Out_opt_ _Contains_long_timet_ struct itimerspec *ovalue
+name: freebsd32_ktimer_settime
+arg alias: freebsd32_ktimer_settime_args
+		    _Out_ _Contains_long_timet_ struct itimerspec *value
+name: freebsd32_ktimer_gettime
+arg alias: freebsd32_ktimer_gettime_args
+name: ktimer_getoverrun
+arg alias: ktimer_getoverrun_args
+		    _In_ _Contains_long_timet_ const struct timespec *rqtp,
+		    _Out_opt_ _Contains_long_timet_ struct timespec *rmtp
+name: freebsd32_nanosleep
+arg alias: freebsd32_nanosleep_args
+name: ffclock_getcounter
+arg alias: ffclock_getcounter_args
+		    _In_ _Contains_timet_ struct ffclock_estimate *cest
+name: freebsd32_ffclock_setestimate
+arg alias: freebsd32_ffclock_setestimate_args
+		    _Out_ _Contains_timet_ struct ffclock_estimate *cest
+name: freebsd32_ffclock_getestimate
+arg alias: freebsd32_ffclock_getestimate_args
+		    _In_ _Contains_long_timet_ const struct timespec *rqtp,
+		    _Out_opt_ _Contains_long_timet_ struct timespec *rmtp
+name: freebsd32_clock_nanosleep
+arg alias: freebsd32_clock_nanosleep_args
+name: clock_getcpuclockid2
+arg alias: clock_getcpuclockid2_args
+		    _Out_ _Contains_long_timet_ struct ntptimeval *ntvp
+name: freebsd32_ntp_gettime
+arg alias: freebsd32_ntp_gettime_args
+name: minherit
+arg alias: minherit_args
+name: rfork
+arg alias: rfork_args
+name: issetugid
+arg alias: issetugid_args
+name: lchown
+arg alias: lchown_args
+		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_read
+arg alias: freebsd32_aio_read_args
+		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_write
+arg alias: freebsd32_aio_write_args
+		    _Inout_updates_(nent) _Contains_long_ptr_ struct aiocb * const *acb_list,
+		    _In_opt_ _Contains_long_ptr_ struct sigevent *sig
+name: freebsd32_lio_listio
+arg alias: freebsd32_lio_listio_args
+name: getdents
+arg alias: freebsd11_getdents_args
+name: lchmod
+arg alias: lchmod_args
+		    _In_ _Contains_long_timet_ const struct timeval *tptr
+name: freebsd32_lutimes
+arg alias: freebsd32_lutimes_args
+		    _Out_ _Contains_long_timet_ struct nstat *ub
+name: freebsd32_nstat
+arg alias: freebsd11_freebsd32_nstat_args
+		    _Out_ _Contains_long_timet_ struct nstat *sb
+name: freebsd32_nfstat
+arg alias: freebsd11_freebsd32_nfstat_args
+		    _Out_ _Contains_long_timet_ struct nstat *ub
+name: freebsd32_nlstat
+arg alias: freebsd11_freebsd32_nlstat_args
+		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+name: freebsd32_preadv
+arg alias: freebsd32_preadv_args
+		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+name: freebsd32_pwritev
+arg alias: freebsd32_pwritev_args
+		    _Out_ _Contains_long_ struct ostatfs *buf
+name: freebsd32_fhstatfs
+arg alias: freebsd4_freebsd32_fhstatfs_args
+name: fhopen
+arg alias: fhopen_args
+		    _Out_ _Contains_long_timet_ struct freebsd11_stat *sb
+name: freebsd32_fhstat
+arg alias: freebsd11_freebsd32_fhstat_args
+name: modnext
+arg alias: modnext_args
+		    _Out_ _Contains_long_ struct module_stat *stat
+name: freebsd32_modstat
+arg alias: freebsd32_modstat_args
+name: modfnext
+arg alias: modfnext_args
+name: modfind
+arg alias: modfind_args
+name: kldload
+arg alias: kldload_args
+name: kldunload
+arg alias: kldunload_args
+name: kldfind
+arg alias: kldfind_args
+name: kldnext
+arg alias: kldnext_args
+		    _Out_ _Contains_long_ptr_ struct kld_file_stat *stat
+name: freebsd32_kldstat
+arg alias: freebsd32_kldstat_args
+name: kldfirstmod
+arg alias: kldfirstmod_args
+name: getsid
+arg alias: getsid_args
+name: setresuid
+arg alias: setresuid_args
+name: setresgid
+arg alias: setresgid_args
+		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_return
+arg alias: freebsd32_aio_return_args
+		    _Inout_updates_(nent) _Contains_long_ptr_ struct aiocb * const * aiocbp,
+		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+name: freebsd32_aio_suspend
+arg alias: freebsd32_aio_suspend_args
+		    _In_opt_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: aio_cancel
+arg alias: aio_cancel_args
+		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_error
+arg alias: freebsd32_aio_error_args
+		    _Inout_ _Contains_long_ptr_ struct oaiocb *aiocbp
+name: freebsd32_aio_read
+arg alias: freebsd6_freebsd32_aio_read_args
+		    _Inout_ _Contains_long_ptr_ struct oaiocb *aiocbp
+name: freebsd32_aio_write
+arg alias: freebsd6_freebsd32_aio_write_args
+		    _Inout_updates_(nent) _Contains_long_ptr_ struct oaiocb * const *acb_list,
+		    _In_opt_ _Contains_ptr_ struct osigevent *sig
+name: freebsd32_lio_listio
+arg alias: freebsd6_freebsd32_lio_listio_args
+name: yield
+arg alias: yield_args
+name: mlockall
+arg alias: mlockall_args
+name: munlockall
+arg alias: munlockall_args
+name: __getcwd
+arg alias: __getcwd_args
+name: sched_setparam
+arg alias: sched_setparam_args
+name: sched_getparam
+arg alias: sched_getparam_args
+name: sched_setscheduler
+arg alias: sched_setscheduler_args
+name: sched_getscheduler
+arg alias: sched_getscheduler_args
+name: sched_yield
+arg alias: sched_yield_args
+name: sched_get_priority_max
+arg alias: sched_get_priority_max_args
+name: sched_get_priority_min
+arg alias: sched_get_priority_min_args
+		    _Out_ _Contains_long_timet_ struct timespec *interval
+name: freebsd32_sched_rr_get_interval
+arg alias: freebsd32_sched_rr_get_interval_args
+name: utrace
+arg alias: utrace_args
+		    _In_opt_ _Contains_ptr_ struct sf_hdtr *hdtr,
+name: sendfile
+arg alias: freebsd4_sendfile_args
+		    _In_ _Contains_long_ptr_ void *data
+name: freebsd32_kldsym
+arg alias: freebsd32_kldsym_args
+		    _In_ _Contains_ptr_ struct jail *jail
+name: freebsd32_jail
+arg alias: freebsd32_jail_args
+name: nnpfs_syscall
+arg alias: nnpfs_syscall_args
+name: sigprocmask
+arg alias: sigprocmask_args
+name: sigsuspend
+arg alias: sigsuspend_args
+		    _In_opt_ _Contains_ptr_ const struct sigaction *act,
+		    _Out_opt_ _Contains_ptr_ struct sigaction *oact
+name: freebsd32_sigaction
+arg alias: freebsd4_freebsd32_sigaction_args
+name: sigpending
+arg alias: sigpending_args
+		    _In_ _Contains_long_ptr_ const struct freebsd4_ucontext *sigcntxp
+name: freebsd32_sigreturn
+arg alias: freebsd4_freebsd32_sigreturn_args
+		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info,
+		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+name: freebsd32_sigtimedwait
+arg alias: freebsd32_sigtimedwait_args
+		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info
+name: freebsd32_sigwaitinfo
+arg alias: freebsd32_sigwaitinfo_args
+name: __acl_get_file
+arg alias: __acl_get_file_args
+name: __acl_set_file
+arg alias: __acl_set_file_args
+name: __acl_get_fd
+arg alias: __acl_get_fd_args
+name: __acl_set_fd
+arg alias: __acl_set_fd_args
+name: __acl_delete_file
+arg alias: __acl_delete_file_args
+name: __acl_delete_fd
+arg alias: __acl_delete_fd_args
+name: __acl_aclcheck_file
+arg alias: __acl_aclcheck_file_args
+name: __acl_aclcheck_fd
+arg alias: __acl_aclcheck_fd_args
+name: extattrctl
+arg alias: extattrctl_args
+name: extattr_set_file
+arg alias: extattr_set_file_args
+name: extattr_get_file
+arg alias: extattr_get_file_args
+name: extattr_delete_file
+arg alias: extattr_delete_file_args
+		    _Outptr_result_maybenull_ struct aiocb **aiocbp,
+		    _In_opt_ _Contains_long_timet_ struct timespec *timeout
+name: freebsd32_aio_waitcomplete
+arg alias: freebsd32_aio_waitcomplete_args
+name: getresuid
+arg alias: getresuid_args
+name: getresgid
+arg alias: getresgid_args
+name: kqueue
+arg alias: kqueue_args
+		    _In_reads_opt_(nchanges) _Contains_ptr_ const struct freebsd11_kevent *changelist,
+		    _Out_writes_opt_(nevents) _Contains_ptr_ struct freebsd11_kevent *eventlist,
+		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+name: freebsd32_kevent
+arg alias: freebsd11_freebsd32_kevent_args
+name: extattr_set_fd
+arg alias: extattr_set_fd_args
+name: extattr_get_fd
+arg alias: extattr_get_fd_args
+name: extattr_delete_fd
+arg alias: extattr_delete_fd_args
+name: __setugid
+arg alias: __setugid_args
+name: eaccess
+arg alias: eaccess_args
+name: afs3_syscall
+arg alias: afs3_syscall_args
+		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+name: nmount
+arg alias: nmount_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_get_proc
+arg alias: freebsd32___mac_get_proc_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_set_proc
+arg alias: freebsd32___mac_set_proc_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_get_fd
+arg alias: freebsd32___mac_get_fd_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_get_file
+arg alias: freebsd32___mac_get_file_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_set_fd
+arg alias: freebsd32___mac_set_fd_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_set_file
+arg alias: freebsd32___mac_set_file_args
+name: kenv
+arg alias: kenv_args
+name: lchflags
+arg alias: lchflags_args
+name: uuidgen
+arg alias: uuidgen_args
+		    _In_opt_ _Contains_ptr_ struct sf_hdtr *hdtr,
+name: sendfile
+arg alias: sendfile_args
+name: mac_syscall
+arg alias: mac_syscall_args
+name: getfsstat
+arg alias: freebsd11_getfsstat_args
+name: statfs
+arg alias: freebsd11_statfs_args
+name: fstatfs
+arg alias: freebsd11_fstatfs_args
+name: fhstatfs
+arg alias: freebsd11_fhstatfs_args
+name: ksem_close
+arg alias: ksem_close_args
+name: ksem_post
+arg alias: ksem_post_args
+name: ksem_wait
+arg alias: ksem_wait_args
+name: ksem_trywait
+arg alias: ksem_trywait_args
+name: freebsd32_ksem_init
+arg alias: freebsd32_ksem_init_args
+name: freebsd32_ksem_open
+arg alias: freebsd32_ksem_open_args
+name: ksem_unlink
+arg alias: ksem_unlink_args
+name: ksem_getvalue
+arg alias: ksem_getvalue_args
+name: ksem_destroy
+arg alias: ksem_destroy_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_get_pid
+arg alias: freebsd32___mac_get_pid_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_get_link
+arg alias: freebsd32___mac_get_link_args
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_set_link
+arg alias: freebsd32___mac_set_link_args
+name: extattr_set_link
+arg alias: extattr_set_link_args
+name: extattr_get_link
+arg alias: extattr_get_link_args
+name: extattr_delete_link
+arg alias: extattr_delete_link_args
+		    _In_ char **argv,
+		    _In_ char **envv,
+		    _In_ _Contains_long_ptr_ struct mac *mac_p
+name: freebsd32___mac_execve
+arg alias: freebsd32___mac_execve_args
+		    _In_opt_ _Contains_ptr_ const struct sigaction *act,
+		    _Out_opt_ _Contains_ptr_ struct sigaction *oact
+name: freebsd32_sigaction
+arg alias: freebsd32_sigaction_args
+		    _In_ _Contains_long_ptr_ const struct __ucontext *sigcntxp
+name: freebsd32_sigreturn
+arg alias: freebsd32_sigreturn_args
+		    _Out_ _Contains_long_ptr_ struct __ucontext *ucp
+name: freebsd32_getcontext
+arg alias: freebsd32_getcontext_args
+		    _In_ _Contains_long_ptr_ const struct __ucontext *ucp
+name: freebsd32_setcontext
+arg alias: freebsd32_setcontext_args
+		    _Out_ _Contains_long_ptr_ struct __ucontext *oucp,
+		    _In_ _Contains_long_ptr_ const struct __ucontext *ucp
+name: freebsd32_swapcontext
+arg alias: freebsd32_swapcontext_args
+name: swapoff
+arg alias: freebsd13_swapoff_args
+name: __acl_get_link
+arg alias: __acl_get_link_args
+name: __acl_set_link
+arg alias: __acl_set_link_args
+name: __acl_delete_link
+arg alias: __acl_delete_link_args
+name: __acl_aclcheck_link
+arg alias: __acl_aclcheck_link_args
+name: sigwait
+arg alias: sigwait_args
+		    _In_ _Contains_long_ptr_ ucontext_t *ctx,
+		    _Out_ long *id,
+name: thr_create
+arg alias: thr_create_args
+		    _Out_opt_ long *state
+name: thr_exit
+arg alias: thr_exit_args
+		    _Out_ long *id
+name: thr_self
+arg alias: thr_self_args
+name: thr_kill
+arg alias: thr_kill_args
+name: freebsd32__umtx_lock
+arg alias: freebsd10_freebsd32__umtx_lock_args
+name: freebsd32__umtx_unlock
+arg alias: freebsd10_freebsd32__umtx_unlock_args
+name: jail_attach
+arg alias: jail_attach_args
+name: extattr_list_fd
+arg alias: extattr_list_fd_args
+name: extattr_list_file
+arg alias: extattr_list_file_args
+name: extattr_list_link
+arg alias: extattr_list_link_args
+		    _In_opt_ _Contains_long_timet_ const struct timespec *abstime
+name: freebsd32_ksem_timedwait
+arg alias: freebsd32_ksem_timedwait_args
+		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+name: freebsd32_thr_suspend
+arg alias: freebsd32_thr_suspend_args
+name: thr_wake
+arg alias: thr_wake_args
+name: kldunloadf
+arg alias: kldunloadf_args
+name: audit
+arg alias: audit_args
+name: auditon
+arg alias: auditon_args
+name: getauid
+arg alias: getauid_args
+name: setauid
+arg alias: setauid_args
+name: getaudit
+arg alias: getaudit_args
+name: setaudit
+arg alias: setaudit_args
+name: getaudit_addr
+arg alias: getaudit_addr_args
+name: setaudit_addr
+arg alias: setaudit_addr_args
+name: auditctl
+arg alias: auditctl_args
+name: freebsd32__umtx_op
+arg alias: freebsd32__umtx_op_args
+		    _In_ _Contains_long_ptr_ struct thr_param *param,
+name: thr_new
+arg alias: thr_new_args
+name: freebsd32_sigqueue
+arg alias: freebsd32_sigqueue_args
+		    _In_opt_ _Contains_long_ const struct mq_attr *attr
+name: freebsd32_kmq_open
+arg alias: freebsd32_kmq_open_args
+		    _In_opt_ _Contains_long_ const struct mq_attr *attr,
+		    _Out_opt_ _Contains_long_ struct mq_attr *oattr
+name: freebsd32_kmq_setattr
+arg alias: freebsd32_kmq_setattr_args
+		    _In_opt_ _Contains_long_timet_ const struct timespec *abs_timeout
+name: freebsd32_kmq_timedreceive
+arg alias: freebsd32_kmq_timedreceive_args
+		    _In_opt_ _Contains_long_timet_ const struct timespec *abs_timeout
+name: freebsd32_kmq_timedsend
+arg alias: freebsd32_kmq_timedsend_args
+		    _In_opt_ _Contains_long_ptr_ const struct sigevent *sigev
+name: freebsd32_kmq_notify
+arg alias: freebsd32_kmq_notify_args
+name: kmq_unlink
+arg alias: kmq_unlink_args
+		    _In_reads_(nargs) void **args
+name: freebsd32_abort2
+arg alias: freebsd32_abort2_args
+name: thr_set_name
+arg alias: thr_set_name_args
+		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_fsync
+arg alias: freebsd32_aio_fsync_args
+name: rtprio_thread
+arg alias: rtprio_thread_args
+name: sctp_peeloff
+arg alias: sctp_peeloff_args
+name: sctp_generic_sendmsg
+arg alias: sctp_generic_sendmsg_args
+		    _In_reads_(iovlen) _Contains_long_ptr_ struct iovec *iov,
+name: sctp_generic_sendmsg_iov
+arg alias: sctp_generic_sendmsg_iov_args
+		    _In_reads_(iovlen) _Contains_long_ptr_ struct iovec *iov,
+name: sctp_generic_recvmsg
+arg alias: sctp_generic_recvmsg_args
+name: freebsd32_pread
+arg alias: freebsd32_pread_args
+name: freebsd32_pwrite
+arg alias: freebsd32_pwrite_args
+name: freebsd32_mmap
+arg alias: freebsd32_mmap_args
+name: lseek
+arg alias: lseek_args
+name: freebsd32_truncate
+arg alias: freebsd32_truncate_args
+name: freebsd32_ftruncate
+arg alias: freebsd32_ftruncate_args
+name: thr_kill2
+arg alias: thr_kill2_args
+name: shm_open
+arg alias: freebsd12_shm_open_args
+name: shm_unlink
+arg alias: shm_unlink_args
+name: cpuset
+arg alias: cpuset_args
+name: cpuset_setid
+arg alias: cpuset_setid_args
+name: cpuset_getid
+arg alias: cpuset_getid_args
+name: cpuset_getaffinity
+arg alias: cpuset_getaffinity_args
+name: cpuset_setaffinity
+arg alias: cpuset_setaffinity_args
+name: faccessat
+arg alias: faccessat_args
+name: fchmodat
+arg alias: fchmodat_args
+name: fchownat
+arg alias: fchownat_args
+		    _In_ char **argv,
+		    _In_ char **envv
+name: freebsd32_fexecve
+arg alias: freebsd32_fexecve_args
+		    _Out_ _Contains_long_timet_ struct freebsd11_stat *buf,
+name: fstatat
+arg alias: freebsd11_fstatat_args
+		    _In_reads_(2) _Contains_long_timet_ const struct timeval *times
+name: freebsd32_futimesat
+arg alias: freebsd32_futimesat_args
+name: linkat
+arg alias: linkat_args
+name: mkdirat
+arg alias: mkdirat_args
+name: mkfifoat
+arg alias: mkfifoat_args
+name: mknodat
+arg alias: freebsd11_mknodat_args
+name: openat
+arg alias: openat_args
+name: readlinkat
+arg alias: readlinkat_args
+name: renameat
+arg alias: renameat_args
+name: symlinkat
+arg alias: symlinkat_args
+name: unlinkat
+arg alias: unlinkat_args
+name: posix_openpt
+arg alias: posix_openpt_args
+name: gssd_syscall
+arg alias: gssd_syscall_args
+		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+name: jail_get
+arg alias: jail_get_args
+		    _In_reads_(iovcnt) _Contains_long_ptr_ struct iovec *iovp,
+name: jail_set
+arg alias: jail_set_args
+name: jail_remove
+arg alias: jail_remove_args
+name: closefrom
+arg alias: freebsd12_closefrom_args
+		    _Inout_ _Contains_ptr_ union semun *arg
+name: freebsd32___semctl
+arg alias: freebsd32___semctl_args
+		    _Inout_opt_ _Contains_long_ptr_ struct msqid_ds *buf
+name: freebsd32_msgctl
+arg alias: freebsd32_msgctl_args
+		    _Inout_opt_ _Contains_long_ struct shmid_ds *buf
+name: freebsd32_shmctl
+arg alias: freebsd32_shmctl_args
+name: lpathconf
+arg alias: lpathconf_args
+name: __cap_rights_get
+arg alias: __cap_rights_get_args
+name: cap_enter
+arg alias: cap_enter_args
+name: cap_getmode
+arg alias: cap_getmode_args
+name: pdfork
+arg alias: pdfork_args
+name: pdkill
+arg alias: pdkill_args
+name: pdgetpid
+arg alias: pdgetpid_args
+		    _In_opt_ _Contains_long_timet_ const struct timespec *ts,
+name: pselect
+arg alias: pselect_args
+name: getloginclass
+arg alias: getloginclass_args
+name: setloginclass
+arg alias: setloginclass_args
+name: rctl_get_racct
+arg alias: rctl_get_racct_args
+name: rctl_get_rules
+arg alias: rctl_get_rules_args
+name: rctl_get_limits
+arg alias: rctl_get_limits_args
+name: rctl_add_rule
+arg alias: rctl_add_rule_args
+name: rctl_remove_rule
+arg alias: rctl_remove_rule_args
+name: freebsd32_posix_fallocate
+arg alias: freebsd32_posix_fallocate_args
+name: posix_fadvise
+arg alias: posix_fadvise_args
+		    _Out_opt_ _Contains_long_ struct __wrusage *wrusage,
+		    _Out_opt_ _Contains_long_ptr_ struct siginfo *info
+name: freebsd32_wait6
+arg alias: freebsd32_wait6_args
+name: cap_rights_limit
+arg alias: cap_rights_limit_args
+		    _In_reads_(ncmds) const u_long *cmds,
+name: cap_ioctls_limit
+arg alias: cap_ioctls_limit_args
+		    _Out_writes_(maxcmds) u_long *cmds,
+name: cap_ioctls_get
+arg alias: cap_ioctls_get_args
+name: cap_fcntls_limit
+arg alias: cap_fcntls_limit_args
+name: cap_fcntls_get
+arg alias: cap_fcntls_get_args
+name: bindat
+arg alias: bindat_args
+name: connectat
+arg alias: connectat_args
+name: chflagsat
+arg alias: chflagsat_args
+name: accept4
+arg alias: accept4_args
+name: pipe2
+arg alias: pipe2_args
+		    _In_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_mlock
+arg alias: freebsd32_aio_mlock_args
+name: procctl
+arg alias: procctl_args
+		    _In_opt_ _Contains_long_timet_ const struct timespec *ts,
+name: ppoll
+arg alias: ppoll_args
+		    _In_reads_(2) _Contains_long_timet_ const struct timespec *times
+name: freebsd32_futimens
+arg alias: freebsd32_futimens_args
+		    _In_reads_(2) _Contains_long_timet_ const struct timespec *times,
+name: utimensat
+arg alias: utimensat_args
+name: fdatasync
+arg alias: fdatasync_args
+		    _Out_ _Contains_long_timet_ struct stat *sb
+name: freebsd32_fstat
+arg alias: freebsd32_fstat_args
+		    _Out_ _Contains_long_timet_ struct stat *buf,
+name: fstatat
+arg alias: fstatat_args
+		    _Out_ _Contains_long_timet_ struct stat *sb
+name: freebsd32_fhstat
+arg alias: freebsd32_fhstat_args
+name: getdirentries
+arg alias: getdirentries_args
+name: statfs
+arg alias: statfs_args
+name: fstatfs
+arg alias: fstatfs_args
+name: getfsstat
+arg alias: getfsstat_args
+name: fhstatfs
+arg alias: fhstatfs_args
+name: freebsd32_mknodat
+arg alias: freebsd32_mknodat_args
+		    _In_reads_opt_(nchanges) _Contains_ptr_ const struct kevent *changelist,
+		    _Out_writes_opt_(nevents) _Contains_ptr_ struct kevent *eventlist,
+		    _In_opt_ _Contains_long_timet_ const struct timespec *timeout
+name: freebsd32_kevent
+arg alias: freebsd32_kevent_args
+name: cpuset_getdomain
+arg alias: cpuset_getdomain_args
+name: cpuset_setdomain
+arg alias: cpuset_setdomain_args
+name: getrandom
+arg alias: getrandom_args
+name: getfhat
+arg alias: getfhat_args
+name: fhlink
+arg alias: fhlink_args
+name: fhlinkat
+arg alias: fhlinkat_args
+name: fhreadlink
+arg alias: fhreadlink_args
+name: funlinkat
+arg alias: funlinkat_args
+name: copy_file_range
+arg alias: copy_file_range_args
+		    _Inout_opt_ size_t *oldlenp,
+name: __sysctlbyname
+arg alias: __sysctlbyname_args
+name: shm_open2
+arg alias: shm_open2_args
+name: shm_rename
+arg alias: shm_rename_args
+name: sigfastblock
+arg alias: sigfastblock_args
+name: __realpathat
+arg alias: __realpathat_args
+name: close_range
+arg alias: close_range_args
+name: rpctls_syscall
+arg alias: rpctls_syscall_args
+name: __specialfd
+arg alias: __specialfd_args
+		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_writev
+arg alias: freebsd32_aio_writev_args
+		    _Inout_ _Contains_long_ptr_ struct aiocb *aiocbp
+name: freebsd32_aio_readv
+arg alias: freebsd32_aio_readv_args
+name: fspacectl
+arg alias: fspacectl_args
+name: sched_getcpu
+arg alias: sched_getcpu_args
+name: swapoff
+arg alias: swapoff_args
+name: kqueuex
+arg alias: kqueuex_args

@@ -36,7 +36,7 @@ function syscalls.generate(tbl, config, fh)
     gen:write(string.format("const char *%s[] = {\n", config.namesname))
 
 	for _, v in pairs(s) do
-		local c = v:compat_level()
+		local c = v:compatLevel()
         if v:native() then
             gen:write(string.format("\t\"%s\",\t\t\t/* %d = %s */\n",
 	            v.alias, v.num, v.alias))

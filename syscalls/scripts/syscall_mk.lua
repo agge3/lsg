@@ -42,7 +42,7 @@ function syscall_mk.generate(tbl, config, fh)
 
     gen:write("MIASM =  \\\n") -- preamble
 	for _, v in pairs(s) do
-        local c = v:compat_level()
+        local c = v:compatLevel()
         idx = idx + 1
 		if v:native() and not v.type.NODEF then
             if idx >= size then

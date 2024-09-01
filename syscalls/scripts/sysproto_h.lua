@@ -86,7 +86,7 @@ struct thread;
 	end
 
     for _, v in pairs(s) do
-        local c = v:compat_level()
+        local c = v:compatLevel()
 
         -- Audit defines are stored at an arbitrarily large number so that
         -- they're always at the last storage level, and compat entries can be
@@ -102,6 +102,7 @@ struct thread;
                not v.type.NODEF then
                 if #v.args > 0 then
                     gen:write(string.format("struct %s {\n", v.arg_alias))
+					--print(v.arg_alias)
                     for _, arg in ipairs(v.args) do
                         if arg.type == "int" and arg.name == "_pad" and
                            config.abiChanges("pair_64bit") then
@@ -147,6 +148,7 @@ struct thread;
                not v.type.NOARGS then
                 if #v.args > 0 then
                     gen:store(string.format("struct %s {\n", v.arg_alias), idx)
+					--print(v.arg_alias)
                     for _, arg in ipairs(v.args) do
 		                gen:store(string.format(
 		                    "\tchar %s_l_[PADL_(%s)]; %s %s; " ..
@@ -167,7 +169,7 @@ struct thread;
                not v.type.NODEF then
 		        gen:store(string.format(
 		            "%s\t%s%s(struct thread *, struct %s *);\n",
-		            v.rettype, v.prefix, v:symbol(), v.arg_alias), idx + 1)
+		            v.rettype, v.prefix, v.name, v.arg_alias), idx + 1)
 		        gen:store(string.format(
 		            "#define\t%sAUE_%s%s\t%s\n", config.syscallprefix,
 		            v.prefix, v:symbol(), v.audit), audit_idx)

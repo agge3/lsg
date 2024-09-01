@@ -66,7 +66,7 @@ struct sysent %s[] = {
 ]], config.switchname))
 
     for _, v in pairs(s) do
-        local c = v:compat_level()
+        local c = v:compatLevel()
         local argssize = util.processArgsize(v)
         -- Comment is the function alias by default, but may change based on the
         -- type of system call.

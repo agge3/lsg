@@ -20,6 +20,7 @@ local function checkAbiChanges(arg)
 		if config.abiChanges(k) and v ~= nil then
 			for _, e in pairs(v) do
 				if arg:find(e) then
+					print(arg)
 					return true
 				end
 			end
@@ -55,8 +56,8 @@ function scarg:process()
     if self.type ~= "" and self.name ~= "void" then
 		-- util.is64bitType() needs a bare type so check it after argname
 		-- is removed
-		self.changes_abi = config.abiChanges("pair_64bit") and 
-			util.is64bitType(self.type)
+		self.changes_abi = self.changes_abi or 
+			(config.abiChanges("pair_64bit") and util.is64bitType(self.type))
 
 		self.type = self.type:gsub("intptr_t", config.abi_intptr_t)
 		self.type = self.type:gsub("semid_t", config.abi_semid_t)
